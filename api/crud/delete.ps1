@@ -13,17 +13,17 @@
 			return
 		}
 
-		$sqlx = "DELETE FROM [feature] WHERE [id] = @id;"
+		$sqlx = "DELETE FROM [items] WHERE [id] = @id;"
 		$params = @{
 			id = [int]$id
 		}
 		Write-FormattedLog -tag 'database' -log "db: $($db); sqlx: $($sqlx); id: $id"
 		Invoke-SqliteQuery -DataSource $db -Query $sqlx -SqlParameters $params
-		Write-FormattedLog -tag 'debug' -log "CRUD deleted successfully"
-		Write-PodeJsonResponse -StatusCode 200 -Value @{ message = "CRUD deleted successfully" }
+		Write-FormattedLog -tag 'debug' -log "Item deleted successfully"
+		Write-PodeJsonResponse -StatusCode 200 -Value @{ message = "Item deleted successfully" }
 
 	} catch {
-		Write-FormattedLog -tag 'error' -log "Error deleting feature: $_"
+		Write-FormattedLog -tag 'error' -log "Error deleting item: $_"
 		Write-PodeJsonResponse -StatusCode 500 -Value @{ message = "Internal server error" }
 	}
 

@@ -16,46 +16,29 @@
 
 		Write-FormattedLog -tag 'debug' -log "Parsed POST data: $($data | ConvertTo-Json -Compress)"
 
-		if (-not $data.application) {
-			Write-FormattedLog -tag 'error' -log "Missing required field: application"
-			Write-PodeJsonResponse -StatusCode 400 -Value @{ message = "Missing required field: application" }
+		$item = ([string]$data.item).Trim()
+		$description = ([string]$data.description).Trim()
+
+		if ([string]::IsNullOrWhiteSpace($item)) {
+			Write-FormattedLog -tag 'error' -log "Missing required field: item"
+			Write-PodeJsonResponse -StatusCode 400 -Value @{ message = "Missing required field: item" }
 			return
 		}
 
-		if (-not $data.featureName) {
-			Write-FormattedLog -tag 'error' -log "Missing required field: featureName"
-			Write-PodeJsonResponse -StatusCode 400 -Value @{ message = "Missing required field: featureName" }
+		if ([string]::IsNullOrWhiteSpace($description)) {
+			Write-FormattedLog -tag 'error' -log "Missing required field: description"
+			Write-PodeJsonResponse -StatusCode 400 -Value @{ message = "Missing required field: description" }
 			return
 		}
 
-		if (-not $data.featureText) {
-			Write-FormattedLog -tag 'error' -log "Missing required field: featureText"
-			Write-PodeJsonResponse -StatusCode 400 -Value @{ message = "Missing required field: featureText" }
-			return
-		}
-
-		if (-not $data.tag) {
-			Write-FormattedLog -tag 'error' -log "Missing required field: tag"
-			Write-PodeJsonResponse -StatusCode 400 -Value @{ message = "Missing required field: tag" }
-			return
-		}
-
-		$sanitizedApp = Remove-UnsafeCharacter $data.application
-		$sanitizedCRUD = Remove-UnsafeCharacter $data.featureName
-		$sanitizedCRUDText = Remove-UnsafeCharacter $data.featureText
-		$sanitizedTag = Remove-UnsafeCharacter $data.tag
-
-		$sqlx = "INSERT INTO [feature] ([application], [featureName], [featureText], [tag], [created_at], [rank]) VALUES (@application, @featureName, @featureText, @tag, @created_at, 1);"
+		$sqlx = "INSERT INTO [items] ([item], [description]) VALUES (@item, @description);"
 		$params = @{
-			application = $sanitizedApp
-			featureName = $sanitizedCRUD
-			featureText = $sanitizedCRUDText
-			tag = $sanitizedTag
-			created_at = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+			item = $item
+			description = $description
 		}
 		Write-FormattedLog -tag 'database' -log "db: $($db); sqlx: $($sqlx); params: $($params | ConvertTo-Json -Compress)"
 		Invoke-SqliteQuery -DataSource $db -Query $sqlx -SqlParameters $params
-		Write-PodeJsonResponse -StatusCode 201 -Value @{ message = "CRUD created successfully" }
+		Write-PodeJsonResponse -StatusCode 201 -Value @{ message = "Item created successfully" }
 
 	} catch {
 		Write-FormattedLog -tag 'error' -log "Error in POST method: $($_.Exception.Message)"

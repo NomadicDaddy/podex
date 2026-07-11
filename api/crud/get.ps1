@@ -1,14 +1,11 @@
 {
 
 	$isHTMX = $($WebEvent.Request.Headers.'HX-Request')
-	$isJsonEnc = $($WebEvent.Request.Headers.'Content-Type') -eq 'application/json'
-
 	$db = (Get-PodeConfig).Podex.DBFile
 
 	Write-FormattedLog -tag 'api' -log "Items API: $($WebEvent.Method.ToUpper()) $($WebEvent.Path) `$isHTMX:$($isHTMX) Q: $($WebEvent.Query | ConvertTo-Json -Compress)"
 
 	try {
-		$tagFilter = $WebEvent.Query['tagFilter']
 		$search = $WebEvent.Query['search']
 		$page = [int]($WebEvent.Query['page'] ?? 1)
 		$pageSize = [int]($WebEvent.Query['pageSize'] ?? 10)
@@ -17,39 +14,24 @@
 
 		$offset = ($page - 1) * $pageSize
 
-		$sqlx = "SELECT [id], [application], [featureName], [tag], date([created_at]) as [created_at], [rank] FROM [feature]"
-		$countSqlx = "SELECT Count(*) as count FROM [feature]"
-		$whereClause = ""
+		$sqlx = "SELECT [id], [item], [description], date([created_at]) as [created_at], [updated_at] FROM [items]"
 		$params = @{}
 
-		if ($tagFilter -or $search) {
-			$whereClause = " WHERE"
-			if ($tagFilter) {
-				$whereClause += " lower([tag]) = lower(@tagFilter)"
-				$params['tagFilter'] = $tagFilter
-			}
-			if ($search) {
-				if ($tagFilter) { $whereClause += " AND" }
-				$whereClause += " ([application] LIKE @search OR [featureName] LIKE @search)"
-				$params['search'] = "%$search%"
-			}
+		if ($search) {
+			$sqlx += " WHERE ([item] LIKE @search OR [description] LIKE @search)"
+			$params['search'] = "%$search%"
 		}
 
-		$sqlx += $whereClause
-		$countSqlx += $whereClause
-
-		$sqlx += " ORDER BY [rank] DESC, [created_at] DESC LIMIT @pageSize OFFSET @offset;"
+		$sqlx += " ORDER BY [created_at] DESC, [id] DESC LIMIT @pageSize OFFSET @offset;"
 
 		$params['pageSize'] = $pageSize
 		$params['offset'] = $offset
 
-		# Write-FormattedLog -tag 'database' -log "db: $($db); sqlx: $($sqlx); tagFilter: $tagFilter; search: $search; params: $($params | ConvertTo-Json -Compress)"
+		# Write-FormattedLog -tag 'database' -log "db: $($db); sqlx: $($sqlx); search: $search; params: $($params | ConvertTo-Json -Compress)"
 		$rs = (Invoke-SqliteQuery -DataSource $db -Query $sqlx -SqlParameters $params -As PSObject)
 		$totalItems = $rs.Count
 
-		$tags = (Invoke-SqliteQuery -DataSource $db -Query "select [tag], case when [tag] = '$($tagFilter)' then 'selected' else '' end as [selected] from [tag] order by [tag] asc ;" -As PSObject)
-
-		$startIndex = $offset + 1
+		$startIndex = if ($totalItems -gt 0) { $offset + 1 } else { 0 }
 		$endIndex = [Math]::Min($offset + $pageSize, $totalItems)
 		$totalPages = [Math]::Ceiling($totalItems / $pageSize)
 		$hasPreviousPage = $page -gt 1
@@ -64,7 +46,6 @@
 
 		$response = @{
 			rows = $rs
-			tags = $tags
 			startIndex = $startIndex
 			endIndex = $endIndex
 			totalItems = $totalItems
@@ -81,21 +62,8 @@
 			New-Item -Name "$($WebEvent.Method).json" -Path $PSScriptRoot -ItemType File -Value ($response | ConvertTo-Json -Depth 5) -Force
 		}
 
-		if ($response.rows) {
-			Write-FormattedLog -tag 'debug' -log "Items found: $($totalItems)"
-			if ($isJsonEnc) {
-				$response | ConvertTo-Json -Depth 5 | Write-PodeJsonResponse -StatusCode 200
-			} else {
-				$response | Write-PodeHtmlResponse -StatusCode 200
-			}
-		} else {
-			Write-FormattedLog -tag 'debug' -log "No items found"
-			if ($isJsonEnc) {
-				Write-PodeJsonResponse -StatusCode 204 -Value @{ message = "No items found" }
-			} else {
-				Write-PodeHtmlResponse -StatusCode 204 -Value @{ message = "No items found" }
-			}
-		}
+		Write-FormattedLog -tag 'debug' -log "Items found: $($totalItems)"
+		Write-PodeJsonResponse -StatusCode 200 -Value $response
 
 	} catch {
 		Write-FormattedLog -tag 'error' -log "Error retrieving items: $($_.Exception.Message)"

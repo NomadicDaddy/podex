@@ -1,0 +1,15 @@
+{
+	"id": "audit-codebase-analysis-data-model-mismatch",
+	"title": "Align the CRUD demo on the canonical items model",
+	"description": "The CRUD demo must use one canonical model across its initialization schema, handlers, views, and tests. The approved model is the items table with item and description fields; the unrelated legacy feature, tag, rank, and tag-filter surfaces must not be restored.",
+	"category": "Bug",
+	"dependencies": [],
+	"status": "completed",
+	"passes": true,
+	"priority": 1,
+	"spec": "1. Verify api/debug/init.sql creates the canonical items table with id, item, description, created_at, and updated_at columns.\n2. Verify api/crud/get.ps1, post.ps1, put.ps1, and delete.ps1 read and write only the items table using item and description field names; no feature, tag, rank, or tagFilter model remains in the active CRUD surface.\n3. Verify views/components/crudmgr.pode and views/components/crudmgr-new.pode render and submit the same id, item, and description fields returned and accepted by /api/crud.\n4. Verify tests/crud-model.Tests.ps1 initializes a throwaway SQLite database from api/debug/init.sql and exercises successful GET, POST, PUT, and DELETE /api/crud handler paths.",
+	"affectedFiles": ["api/debug/init.sql", "api/crud/get.ps1", "api/crud/post.ps1", "api/crud/put.ps1", "api/crud/delete.ps1", "views/components/crudmgr.pode"],
+	"notes": "Source: pantry build-proof CODEBASE_ANALYSIS-2026-07-10 (finding #1, Critical). Product decision approved 2026-07-10: Podex keeps the CRUD demo using the canonical items/item/description model; legacy feature/tag/rank behavior is removed. Resolution: All CRUD handlers (get/post/put/delete.ps1), init.sql, and views now use only the canonical items table with item and description fields. The legacy feature/application/featureName/tag/rank/tagFilter model and the tag-list SELECT were removed entirely from the active CRUD surface. Pester test crud-model.Tests.ps1 drives GET/POST/PUT/DELETE against a throwaway SQLite DB initialized from init.sql. Live verification through a throwaway Pode server confirmed /crudmgr renders the Mustache template with {{id}}/{{item}}/{{description}} bindings, /htmx/crudmgr-new renders the item/description form posting to /api/crud, and the full CRUD journey (GET/POST/PUT/DELETE) returns canonical data with correct status codes.",
+	"createdAt": "2026-07-10T17:00:00.000Z",
+	"updatedAt": "2026-07-11T02:01:31.324Z"
+}
