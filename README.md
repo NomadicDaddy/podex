@@ -14,6 +14,17 @@
 
 Podex is a framework for building full-stack web applications using PowerShell/Pode for the backend and htmx for the frontend.
 
+### Features
+
+- **Home page:** overview of Podex and its technology choices as a server-rendered Pode view.
+- **CRUD Manager:** list, search, paginate, add, update, and delete items against SQLite via htmx and client-side Mustache templates, with loading, empty, and error states.
+- **File-based JSON API:** `GET/POST/PUT/DELETE /api/crud` with parameterized SQLite queries and validated, status-coded responses.
+- **htmx fragment endpoint:** HTML-only partial responses (e.g. the add-item modal form).
+- **OpenAPI + Swagger:** spec at `/docs/openapi` and interactive UI at `/docs/swagger` for `/api/*`.
+- **Pode view engine:** layouts, partials, and reusable components with Tailwind CSS theming (light/dark compatible).
+- **Debug-only routes:** database init/clear and server-stop helpers, registered only when `Podex.Debug` is enabled.
+- **Quality gates:** formatting, ESLint, PSScriptAnalyzer, Pester tests, Tailwind CSS build, and knip via `bun` scripts, plus foreground/background server lifecycle (`dev`/`start`/`stop`) and an aggregate `smoke:qc`.
+
 ### Technical Stack
 
 - **Backend**: [PowerShell Core](https://github.com/PowerShell/PowerShell), [Pode](https://github.com/Badgerati/Pode), [SQLite](https://www.sqlite.org/index.html)
@@ -31,7 +42,7 @@ Podex is a framework for building full-stack web applications using PowerShell/P
 2. Install dependencies:
 
     ```sh
-    npm install
+    bun install
     ```
 
 3. Install PowerShell modules:
@@ -44,7 +55,7 @@ Podex is a framework for building full-stack web applications using PowerShell/P
 1. Start the server:
 
     ```sh
-    npm start
+    bun run start
     ```
 
 2. Open your browser and navigate to `http://localhost:8433`.
