@@ -1,6 +1,9 @@
 {
 	"name": "podex",
 	"version": "0.1.2",
+	"engines": {
+		"node": ">=24.0.0 <25.0.0"
+	},
 	"description": "Podex - PowerShell/Pode + htmx Framework for Building Web Applications",
 	"author": "Phillip Beazley",
 	"license": "MIT",
@@ -15,31 +18,31 @@
 	],
 	"scripts": {
 		"format": "prettier --write .",
+		"format:check": "prettier --check .",
 		"lint": "eslint .",
-		"css": "npx @tailwindcss/cli -i ./public/css/tailwind.css -o ./public/css/output.css",
+		"css": "bunx @tailwindcss/cli -i ./public/css/tailwind.css -o ./public/css/output.css",
 		"analyze": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -Command \"Import-Module PSScriptAnalyzer ; Invoke-ScriptAnalyzer -Path ./\"",
 		"test": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -Command \"Import-Module Pester ; Invoke-Pester -Path ./tests/*.ps1\"",
 		"build": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass \"./.build.ps1\"",
-		"start": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass \"./podex.ps1\""
+		"dev": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass \"./tools/serve.ps1\"",
+		"start": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass \"./tools/serve.ps1\" -Background",
+		"stop": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass \"./tools/stop.ps1\"",
+		"smoke:qc": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass \"./tools/smoke-qc.ps1\""
 	},
 	"dependencies": {
-		"@tailwindcss/aspect-ratio": "^0.4.2",
-		"@tailwindcss/cli": "^4.0.0",
-		"@tailwindcss/forms": "^0.5.9",
-		"@tailwindcss/typography": "^0.5.15",
-		"htmx-ext-client-side-templates": "^2.0.0",
-		"htmx-ext-debug": "^2.0.0",
-		"htmx-ext-json-enc": "^2.0.1",
-		"htmx.org": "^2.0.4",
+		"@tailwindcss/cli": "^4.3.2",
+		"@tailwindcss/typography": "^0.5.20",
+		"htmx.org": "^4.0.0-beta5",
 		"mustache": "^4.2.0",
-		"tailwindcss": "^4.0.0"
+		"tailwindcss": "^4.3.2"
 	},
 	"devDependencies": {
-		"@eslint/js": "^9.19.0",
-		"eslint": "^9.19.0",
-		"globals": "^15.14.0",
-		"prettier": "^3.4.2",
-		"prettier-plugin-sql": "^0.18.1",
-		"prettier-plugin-tailwindcss": "^0.6.11"
+		"@eslint/js": "^10.0.1",
+		"eslint": "^10.7.0",
+		"globals": "^17.7.0",
+		"prettier": "^3.9.5",
+		"prettier-plugin-sql": "^0.20.0",
+		"prettier-plugin-tailwindcss": "^0.8.0",
+		"sharp": "^0.35.3"
 	}
 }

@@ -1,0 +1,98 @@
+# Set the default behavior, in case people don't have core.autocrlf set.
+* text=auto eol=lf
+
+# PowerShell files should use CRLF on Windows
+*.ps1 text eol=crlf
+*.psm1 text eol=crlf
+*.psd1 text eol=crlf
+
+# Markdown files
+*.md text eol=lf
+
+# JSON files
+*.json text eol=lf
+
+# JavaScript files
+*.js text eol=lf
+*.mjs text eol=lf
+*.cjs text eol=lf
+*.jsx text eol=lf
+
+# TypeScript files
+*.ts text eol=lf
+*.tsx text eol=lf
+
+# CSS files
+*.css text eol=lf
+
+# HTML files
+*.html text eol=lf
+*.pode text eol=lf
+
+# Configuration/Data files
+*.config text eol=lf
+*.conf text eol=lf
+*.ini text eol=lf
+*.json text eol=lf
+
+# Text files
+*.txt text eol=lf
+*.log text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# SQL files
+*.sql text eol=lf
+
+# XML files
+*.xml text eol=lf
+
+# YAML files
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Shell scripts (if any)
+*.sh text eol=lf
+
+# Batch files
+*.bat text eol=lf
+*.cmd text eol=lf
+
+# Docker
+*.dockerfile text eol=lf
+Dockerfile text eol=lf
+
+# Binary files (explicitly marked)
+*.exe binary
+*.dll binary
+*.zip binary
+*.7z binary
+*.tar binary
+*.gz binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.lockb binary
+
+# Font files
+*.otf binary
+
+# Archive files
+*.rar binary
+*.zip binary
+
+# Ignore files
+.gitignore text eol=lf
+.gitattributes text eol=lf
+
+# Package files
+package.json text eol=lf
+package-lock.json text eol=lf

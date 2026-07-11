@@ -12,16 +12,10 @@ const config = {
 	printWidth: 180,
 	useTabs: true,
 	bracketSameLine: true,
-	tailwindConfig: './tailwind.config.mjs',
+	tailwindStylesheet: './public/css/tailwind.css',
 	tailwindPreserveWhitespace: true,
 	plugins: ['prettier-plugin-sql', 'prettier-plugin-tailwindcss'],
 	overrides: [
-		{
-			files: ['*.pode'],
-			options: {
-				parser: 'html',
-			},
-		},
 		{
 			files: ['*.sql'],
 			options: {

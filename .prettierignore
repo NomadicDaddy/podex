@@ -10,3 +10,4 @@ package-lock.json
 podex.db
 public/css/output.css
 public/js/**
+**/*.pode
