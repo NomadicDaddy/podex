@@ -6,7 +6,9 @@ logs/
 package-lock.json
 
 # build files
+.aidd/
 .vscode/
-podex.db
+data/
 public/css/output.css
 public/js/
+api/crud/*.json
