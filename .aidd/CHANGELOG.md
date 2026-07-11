@@ -25,6 +25,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `{{description}}` bindings; `/htmx/crudmgr-new` renders the item/description form posting to
   `/api/crud`; the full GET/POST/PUT/DELETE journey returns canonical data with correct status
   codes.
+- Secured destructive debug routes: `server.psd1` now ships `Podex.Debug = $false` by default.
+  Route registration logic extracted to `tools/PodexRoute.psm1` (`Resolve-PodexApiRoute`) and
+  updated in `podex.ps1` to exclude all `api/debug/*.ps1` files entirely when Debug is disabled,
+  rather than registering them at `/api/debug/*`. With Debug enabled the three debug routes
+  register only at `/stop`, `/clear`, and `/init`. Added `tests/debug-route-isolation.Tests.ps1`
+  (4 Pester tests) asserting the six destructive paths are absent with Debug=false and present
+  at the short paths with Debug=true.
 
 #### Live verification completed: 2026-07-10
 
@@ -46,6 +53,23 @@ created_at, updated_at`.
    exercises successful GET, POST, PUT, and DELETE handler paths (Pester: 1 passed, 0 failed).
 
 The PSScriptAnalyzer scan of `api/crud/` reported no warnings or errors.
+
+#### Debug route isolation verification completed: 2026-07-11
+
+**Feature:** `audit-codebase-analysis-unauth-debug-routes`
+
+All five acceptance criteria passed:
+
+1. `server.psd1` now sets `Podex.Debug = $false` in the checked-in default configuration.
+2. `podex.ps1` (via `tools/PodexRoute.psm1`) excludes every `api/debug/*.ps1` file from route
+   registration when `Podex.Debug` is `$false` — they are not registered under any path.
+3. `podex.ps1` registers `api/debug/stop.ps1`, `clear.ps1`, and `init.ps1` only as `GET /stop`,
+   `GET /clear`, and `GET /init` when `Podex.Debug` is explicitly `$true`.
+4. `tests/debug-route-isolation.Tests.ps1` asserts `/stop`, `/clear`, `/init`,
+   `/api/debug/stop`, `/api/debug/clear`, and `/api/debug/init` are absent with `Debug=$false`
+   and only the three short debug routes exist with `Debug=$true` (Pester: 4 passed, 0 failed).
+5. Live requests to all six destructive paths returned HTTP 404 against a throwaway Pode server
+   (port 8453, away from the user-owned instances) under the default configuration.
 
 ### Security
 

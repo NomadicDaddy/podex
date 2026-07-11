@@ -36,7 +36,7 @@
 		HttpsEnabled = $false
 	}
 	Podex = @{
-		Debug = $true
+		Debug = $false
 		DatabaseType = 'SQLite'
 		DBFile = './podex.db'
 	}

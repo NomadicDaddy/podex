@@ -1,5 +1,6 @@
 Import-Module -Name 'PSSQLite' -MaximumVersion 1.99.99 -Force
 Import-Module -Name 'Pode' -MaximumVersion 2.99.99 -Force
+Import-Module -Name "$PSScriptRoot/tools/PodexRoute.psm1" -Force
 
 function Write-FormattedLog {
 	param([string]$tag, [string]$log, [switch]$save)
@@ -78,19 +79,16 @@ Start-PodeServer -Name 'Podex' -Threads 5 -ScriptBlock {
 	Add-PodeRoute -Path '/htmx/crudmgr-new' -Method Get -ScriptBlock { Write-PodeViewResponse -Path 'layouts/bare' -Data @{ Components = @('crud-new'); } }
 
 	# file-based api routes (json or html)
+	# Debug-only routes (api/debug/*.ps1) register only when Podex.Debug is
+	# enabled and use the short public paths /stop, /clear, and /init. With
+	# debug disabled those destructive endpoints are absent entirely so no
+	# unauthenticated caller can reach them.
 	foreach ($file in (Get-ChildItem -Path './api' -Filter *.ps1 -Recurse -File)) {
-		$method = (Get-Culture).TextInfo.ToTitleCase($file.Name) -replace '\.ps1$', ''
-		$relativePath = $file.FullName -replace [regex]::Escape($PWD.Path + '\'), '' -replace '\\', '/'
-		$apiPath = '/' + ($relativePath -replace '\.ps1$', '')
-		if ($method -in @('Get', 'Post', 'Put', 'Delete')) {
-			$apiPath = $apiPath -replace "/$($method)", ''
-		} elseif ($cfg.Podex.Debug -and $relativePath -match '/debug/') {
-			$apiPath = $apiPath -replace '/debug', ''
-			$method = 'Get'
-		} else {
-			$method = 'Get'
+		$routeInfo = Resolve-PodexApiRoute -FilePath $file.FullName -BaseDirectory $PWD.Path -DebugEnabled $cfg.Podex.Debug
+		if ($routeInfo.Skip) {
+			continue
 		}
-		Add-PodeRoute -Path $apiPath -Method $method -FilePath $file.FullName
+		Add-PodeRoute -Path $routeInfo.Path -Method $routeInfo.Method -FilePath $file.FullName
 	}
 
 	# show routes
