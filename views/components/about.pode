@@ -1,76 +1,78 @@
-<section class="bg-gray-50 p-3 sm:p-5 dark:bg-gray-900">
-	<div class="px-2 text-gray-500 sm:text-lg lg:px-3 dark:text-gray-400">
-		<h2 class="mb-4 text-2xl font-bold">Podex - PowerShell/Pode + htmx Framework for Building Web Applications</h2>
-	</div>
-	<div class="mx-auto max-w-(--breakpoint-xl) px-2 py-4 lg:px-3 lg:py-8">
-		<div class="text-gray-500 sm:text-lg dark:text-gray-400">
-			<h2>Podex - PowerShell/Pode + htmx Framework for Building Web Applications</h2>
-			<h3>Table of Contents</h3>
-			<ul>
-				<li><a href="#introduction">Introduction</a></li>
-				<li><a href="#features">Features</a></li>
-				<li><a href="#technical-stack">Technical Stack</a></li>
-				<li><a href="#setup">Setup</a></li>
-				<li><a href="#running-the-project">Running the Project</a></li>
-				<li><a href="#contributing">Contributing</a></li>
-				<li><a href="#license">License</a></li>
-			</ul>
-			<h3>Introduction</h3>
-			<p>Podex is a framework for building full-stack web applications using PowerShell/Pode for the backend and htmx for the frontend.</p>
-			<h3>Technical Stack</h3>
-			<ul>
-				<li>
-					<strong>Backend</strong>: <a href="https://github.com/PowerShell/PowerShell">PowerShell Core</a>, <a href="https://github.com/Badgerati/Pode">Pode</a>,
-					<a href="https://www.sqlite.org/index.html">SQLite</a>
-				</li>
-				<li>
-					<strong>Frontend</strong>: <a href="https://htmx.org/">htmx</a>, <a href="https://mustache.github.io/">Mustache</a>,
-					<a href="https://tailwindcss.com/">Tailwind CSS</a>
-				</li>
-			</ul>
-			<h3>Setup</h3>
-			<ol>
-				<li>
-					Clone the repository:
-					<pre><code class="sh">
-			git clone https://github.com/NomadicDaddy/podex.git
-			cd podex
-				</code></pre>
-				</li>
-				<li>
-					Install dependencies:
-					<pre><code class="sh">
-			npm install
-				</code></pre>
-				</li>
-				<li>
-					Install PowerShell modules:
-					<pre><code class="sh">
-			powershell -Command ". ./.build.ps1"
-				</code></pre>
-				</li>
-			</ol>
-			<h3>Running the Project</h3>
-			<ol>
-				<li>
-					Start the server:
-					<pre><code class="sh">
-			npm start
-				</code></pre>
-				</li>
-				<li>Open your browser and navigate to <code>http://localhost:8433</code>.</li>
-			</ol>
-			<h3>Contributing</h3>
-			<ol>
-				<li>Fork the repository.</li>
-				<li>Create a new branch (<code>git checkout -b feature-branch</code>).</li>
-				<li>Make your changes.</li>
-				<li>Commit your changes (<code>git commit -am 'Add new feature'</code>).</li>
-				<li>Push to the branch (<code>git push origin feature-branch</code>).</li>
-				<li>Create a new Pull Request.</li>
-			</ol>
-			<h3>License</h3>
-			<p>This project is licensed under the MIT License.</p>
+<section class="p-3 sm:p-5">
+	<div class="mx-auto max-w-(--breakpoint-xl)">
+		<div class="relative overflow-hidden bg-white shadow-md sm:rounded-lg dark:bg-gray-800">
+			<div class="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
+				<h2 class="text-2xl font-bold text-gray-900 dark:text-white">Podex - PowerShell/Pode + htmx Framework for Building Web Applications</h2>
+				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">An opinionated full-stack starter powered by PowerShell on the backend and htmx on the frontend.</p>
+			</div>
+			<div class="prose prose-gray dark:prose-invert max-w-none p-6">
+				<h3 id="table-of-contents">Table of Contents</h3>
+				<ul>
+					<li><a href="#introduction">Introduction</a></li>
+					<li><a href="#features">Features</a></li>
+					<li><a href="#technical-stack">Technical Stack</a></li>
+					<li><a href="#setup">Setup</a></li>
+					<li><a href="#running-the-project">Running the Project</a></li>
+					<li><a href="#contributing">Contributing</a></li>
+					<li><a href="#license">License</a></li>
+				</ul>
+				<h3 id="introduction">Introduction</h3>
+				<p>Podex is a framework for building full-stack web applications using PowerShell/Pode for the backend and htmx for the frontend.</p>
+				<h3 id="features">Features</h3>
+				<ul>
+					<li>File-based API routing that maps cleanly to HTTP verbs</li>
+					<li>htmx-driven request cycle with client-side Mustache templating</li>
+					<li>Tailwind CSS theming with light/dark support</li>
+					<li>SQLite storage kept in the application <code>data/</code> directory</li>
+					<li>Built-in OpenAPI / Swagger docs and request logging</li>
+				</ul>
+				<h3 id="technical-stack">Technical Stack</h3>
+				<ul>
+					<li>
+						<strong>Backend</strong>: <a href="https://github.com/PowerShell/PowerShell">PowerShell Core</a>, <a href="https://github.com/Badgerati/Pode">Pode</a>,
+						<a href="https://www.sqlite.org/index.html">SQLite</a>
+					</li>
+					<li>
+						<strong>Frontend</strong>: <a href="https://htmx.org/">htmx</a>, <a href="https://mustache.github.io/">Mustache</a>,
+						<a href="https://tailwindcss.com/">Tailwind CSS</a>
+					</li>
+				</ul>
+				<h3 id="setup">Setup</h3>
+				<ol>
+					<li>
+						Clone the repository:
+						<pre><code>git clone https://github.com/NomadicDaddy/podex.git
+cd podex</code></pre>
+					</li>
+					<li>
+						Install dependencies:
+						<pre><code>bun install</code></pre>
+					</li>
+					<li>
+						Install PowerShell modules:
+						<pre><code>powershell -Command ". ./.build.ps1"</code></pre>
+					</li>
+				</ol>
+				<h3 id="running-the-project">Running the Project</h3>
+				<ol>
+					<li>
+						Start the server:
+						<pre><code>bun run start</code></pre>
+					</li>
+					<li>Open your browser and navigate to <code>http://localhost:8433</code>.</li>
+				</ol>
+				<h3 id="contributing">Contributing</h3>
+				<ol>
+					<li>Fork the repository.</li>
+					<li>Create a new branch (<code>git checkout -b feature-branch</code>).</li>
+					<li>Make your changes.</li>
+					<li>Commit your changes (<code>git commit -am 'Add new feature'</code>).</li>
+					<li>Push to the branch (<code>git push origin feature-branch</code>).</li>
+					<li>Create a new Pull Request.</li>
+				</ol>
+				<h3 id="license">License</h3>
+				<p>This project is licensed under the MIT License.</p>
+			</div>
 		</div>
 	</div>
 </section>

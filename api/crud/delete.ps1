@@ -18,7 +18,7 @@
 			id = [int]$id
 		}
 		Write-FormattedLog -tag 'database' -log "db: $($db); sqlx: $($sqlx); id: $id"
-		Invoke-SqliteQuery -DataSource $db -Query $sqlx -SqlParameters $params
+		Invoke-SqliteQuery -DataSource $db -Query $sqlx -SqlParameters $params -ErrorAction Stop
 		Write-FormattedLog -tag 'debug' -log "Item deleted successfully"
 		Write-PodeJsonResponse -StatusCode 200 -Value @{ message = "Item deleted successfully" }
 

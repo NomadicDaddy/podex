@@ -1,19 +1,21 @@
 @import 'tailwindcss';
 
+@plugin '@tailwindcss/typography';
+
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-	--color-primary-50: #ecfdf5;
-	--color-primary-100: #d1fae5;
-	--color-primary-200: #a7f3d0;
-	--color-primary-300: #6ee7b7;
-	--color-primary-400: #34d399;
-	--color-primary-500: #10b981;
-	--color-primary-600: #059669;
-	--color-primary-700: #047857;
-	--color-primary-800: #065f46;
-	--color-primary-900: #064e3b;
-	--color-primary-950: #022c22;
+	--color-primary-50: #eff6ff;
+	--color-primary-100: #dbeafe;
+	--color-primary-200: #bfdbfe;
+	--color-primary-300: #93c5fd;
+	--color-primary-400: #60a5fa;
+	--color-primary-500: #3b82f6;
+	--color-primary-600: #2563eb;
+	--color-primary-700: #1d4ed8;
+	--color-primary-800: #1e40af;
+	--color-primary-900: #1e3a8a;
+	--color-primary-950: #172554;
 }
 
 /*
@@ -31,6 +33,13 @@
 	::backdrop,
 	::file-selector-button {
 		border-color: var(--color-gray-200, currentColor);
+	}
+
+	/* Reserve the scrollbar gutter on every page so navigating between a long
+	   page (scrollbar visible) and a short one (scrollbar hidden) doesn't cause
+	   a horizontal layout shift. */
+	html {
+		scrollbar-gutter: stable;
 	}
 }
 

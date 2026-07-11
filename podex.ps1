@@ -1,4 +1,4 @@
-Import-Module -Name 'PSSQLite' -MaximumVersion 1.99.99 -Force
+﻿Import-Module -Name 'PSSQLite' -MaximumVersion 1.99.99 -Force
 Import-Module -Name 'Pode' -MaximumVersion 2.99.99 -Force
 Import-Module -Name "$PSScriptRoot/tools/PodexRoute.psm1" -Force
 
@@ -33,18 +33,6 @@ function Write-FormattedLog {
 		$log | Out-File -FilePath "./$($WebEvent.Request.Url.AbsolutePath)/$($WebEvent.Method).json" -Force
 	}
 }
-function Remove-UnsafeCharacter {
-	param([string]$inputString)
-	$inputString = $inputString -replace "'", "''"
-	$inputString = $inputString -replace '"', '\"'
-	$inputString = $inputString -replace ';', '\;'
-	$inputString = $inputString -replace '--', '\-\-'
-	$inputString = $inputString -replace '/\*', '/\*'
-	$inputString = $inputString -replace '\*/', '\*/'
-	$inputString = $inputString -replace '\\', '\\\\'
-	return $inputString
-}
-
 # Start-PodeServer -Name 'Podex' -ConfigFile '.\podex.psd1' -Threads 5 -ScriptBlock {
 Start-PodeServer -Name 'Podex' -Threads 5 -ScriptBlock {
 
@@ -76,19 +64,37 @@ Start-PodeServer -Name 'Podex' -Threads 5 -ScriptBlock {
 
 	# htmx routes (html only)
 	Add-PodeRoute -Path '/htmx/hello' -Method Get -FilePath './htmx/hello.ps1'
-	Add-PodeRoute -Path '/htmx/crudmgr-new' -Method Get -ScriptBlock { Write-PodeViewResponse -Path 'layouts/bare' -Data @{ Components = @('crud-new'); } }
+	Add-PodeRoute -Path '/htmx/item-new' -Method Get -ScriptBlock { Write-PodeViewResponse -Path 'layouts/bare' -Data @{ Components = @('crudmgr-new'); } }
 
 	# file-based api routes (json or html)
 	# Debug-only routes (api/debug/*.ps1) register only when Podex.Debug is
 	# enabled and use the short public paths /stop, /clear, and /init. With
-	# debug disabled those destructive endpoints are absent entirely so no
-	# unauthenticated caller can reach them.
+	# debug disabled those destructive endpoints are absent entirely. When debug
+	# is enabled, a loopback guard still restricts them to localhost so a
+	# reachable debug-enabled host cannot be driven by a remote, unauthenticated
+	# caller.
+	$debugLoopbackGuard = {
+		$clientIp = $WebEvent.Request.Handler.RemoteEndPoint.Address
+		if (($clientIp -eq [System.Net.IPAddress]::Loopback) -or ($clientIp -eq [System.Net.IPAddress]::IPv6Loopback)) {
+			return $true
+		}
+		Set-PodeResponseStatus -Code 403 -Description 'Debug endpoints are restricted to localhost.'
+		return $false
+	}
 	foreach ($file in (Get-ChildItem -Path './api' -Filter *.ps1 -Recurse -File)) {
 		$routeInfo = Resolve-PodexApiRoute -FilePath $file.FullName -BaseDirectory $PWD.Path -DebugEnabled $cfg.Podex.Debug
 		if ($routeInfo.Skip) {
 			continue
 		}
-		Add-PodeRoute -Path $routeInfo.Path -Method $routeInfo.Method -FilePath $file.FullName
+		$routeParams = @{
+			Path = $routeInfo.Path
+			Method = $routeInfo.Method
+			FilePath = $file.FullName
+		}
+		if ($file.FullName -match '[\\/]api[\\/]debug[\\/]') {
+			$routeParams['Middleware'] = $debugLoopbackGuard
+		}
+		Add-PodeRoute @routeParams
 	}
 
 	# show routes

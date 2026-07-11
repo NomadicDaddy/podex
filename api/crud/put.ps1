@@ -45,7 +45,7 @@
 			description = $description
 		}
 		Write-FormattedLog -tag 'database' -log "db: $($db); sqlx: $($sqlx); params: $($params | ConvertTo-Json -Compress)"
-		Invoke-SqliteQuery -DataSource $db -Query $sqlx -SqlParameters $params
+		Invoke-SqliteQuery -DataSource $db -Query $sqlx -SqlParameters $params -ErrorAction Stop
 		Write-FormattedLog -tag 'debug' -log "Item updated successfully"
 		Write-PodeJsonResponse -StatusCode 200 -Value @{ message = "Item updated successfully" }
 

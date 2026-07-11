@@ -1,9 +1,9 @@
-<footer>
-	<div class="mx-auto w-full bg-white bg-linear-to-r from-blue-500 to-purple-500 px-4 py-3 text-center shadow-sm dark:bg-gray-800">
+<footer class="bg-linear-to-r from-blue-600 to-purple-600 shadow-md">
+	<div class="mx-auto w-full max-w-(--breakpoint-lg) px-4 py-4 text-center text-sm text-white/90">
 		<div>
-			Download the <span class="text-white">htmx-debugger</span> extension for
-			<a href="https://addons.mozilla.org/en-US/firefox/addon/htmx-debugger" class="text-yellow-400 hover:underline">Firefox</a> or
-			<a href="https://chrome.google.com/webstore/detail/htmx-debugger/kjafpfamndifhkidbjebdnfjiebgdckf" class="text-yellow-400 hover:underline">Chrome</a>
+			Download the <span class="font-semibold text-white">htmx-debugger</span> extension for
+			<a href="https://addons.mozilla.org/en-US/firefox/addon/htmx-debugger" class="text-yellow-300 underline-offset-2 hover:underline">Firefox</a> or
+			<a href="https://chrome.google.com/webstore/detail/htmx-debugger/kjafpfamndifhkidbjebdnfjiebgdckf" class="text-yellow-300 underline-offset-2 hover:underline">Chrome</a>
 		</div>
 	</div>
 </footer>

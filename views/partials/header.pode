@@ -1,18 +1,17 @@
 <header>
-	<nav class="sticky top-0 z-50 w-full bg-white bg-linear-to-r from-blue-500 to-purple-500 px-4 py-3 shadow-sm dark:bg-gray-800">
-		<div class="mx-auto flex max-w-(--breakpoint-xl) flex-wrap items-center justify-between">
+	<nav class="sticky top-0 z-50 w-full bg-linear-to-r from-blue-600 to-purple-600 px-4 py-3 shadow-md">
+		<div class="mx-auto flex max-w-(--breakpoint-lg) flex-wrap items-center justify-between gap-y-2">
 			<a href="/" class="flex items-center">
-				<img src="/public/images/favicon.svg" class="mr-3 h-8 sm:h-10" alt="adminware" />
-				<span class="self-center whitespace-nowrap text-2xl font-bold text-white hover:text-yellow-300 dark:text-white dark:hover:text-yellow-300">Podex</span>
+				<img src="/public/images/podex.png" class="mr-3 h-8 sm:h-10" alt="Podex" />
+				<span class="self-center whitespace-nowrap text-2xl font-bold text-white hover:text-yellow-300">Podex</span>
 			</a>
-			<ul class="mt-4 flex flex-col font-medium lg:mt-0 lg:flex-row lg:space-x-8">
+			<ul class="flex flex-col font-medium sm:flex-row sm:gap-x-8">
 				$(foreach ($page in @('Home', 'CRUDMgr')) {
-					$activeLight = 'block rounded-sm bg-yellow-500 py-2 pl-3 pr-4 text-white lg:bg-transparent lg:p-0 lg:text-yellow-500'
-					$inactiveLight = 'block py-2 pl-3 pr-4 text-white hover:bg-gray-600 lg:border-0 lg:p-0 lg:hover:bg-transparent lg:hover:text-yellow-500'
-					$activeDark = 'dark:text-white'
-					$inactiveDark = 'dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'
+					$activeLight = 'text-yellow-300'
+					$inactiveLight = 'text-white/90 hover:text-white'
+					$activeUnderline = 'after:absolute after:inset-x-0 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-yellow-300'
 					"<li>
-						<a href='/$($page -eq 'Home' ? '' : $page.ToLower())' class='$($data.PageName -eq $page ? $activeLight : $inactiveLight) $($data.PageName -eq $page ? $activeDark : $inactiveDark) lg:dark:hover:bg-transparent lg:dark:hover:text-white'>
+						<a href='/$($page -eq 'Home' ? '' : $page.ToLower())' class='relative block py-2 transition-colors sm:py-0 $($data.PageName -eq $page ? $activeLight : $inactiveLight) $($data.PageName -eq $page ? $activeUnderline : '')'>
 							$($page.Substring(0,1).ToUpper() + $page.Substring(1) ;)
 						</a>
 					</li>"

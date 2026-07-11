@@ -27,9 +27,18 @@
 		$params['pageSize'] = $pageSize
 		$params['offset'] = $offset
 
+		# Total matching rows (independent of pagination) for accurate page metadata
+		$countSql = "SELECT COUNT(*) AS n FROM [items]"
+		$countParams = @{}
+		if ($search) {
+			$countSql += " WHERE ([item] LIKE @search OR [description] LIKE @search)"
+			$countParams['search'] = "%$search%"
+		}
+		$countResult = (Invoke-SqliteQuery -DataSource $db -Query $countSql -SqlParameters $countParams -As SingleValue -ErrorAction Stop)
+		$totalItems = [int]$countResult
+
 		# Write-FormattedLog -tag 'database' -log "db: $($db); sqlx: $($sqlx); search: $search; params: $($params | ConvertTo-Json -Compress)"
-		$rs = (Invoke-SqliteQuery -DataSource $db -Query $sqlx -SqlParameters $params -As PSObject)
-		$totalItems = $rs.Count
+		$rs = (Invoke-SqliteQuery -DataSource $db -Query $sqlx -SqlParameters $params -As PSObject -ErrorAction Stop)
 
 		$startIndex = if ($totalItems -gt 0) { $offset + 1 } else { 0 }
 		$endIndex = [Math]::Min($offset + $pageSize, $totalItems)

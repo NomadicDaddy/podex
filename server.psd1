@@ -38,6 +38,6 @@
 	Podex = @{
 		Debug = $false
 		DatabaseType = 'SQLite'
-		DBFile = './podex.db'
+		DBFile = './data/podex.db'
 	}
 }
