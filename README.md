@@ -1,82 +1,77 @@
-## Podex - PowerShell/Pode + htmx Framework for Building Web Applications
+# Podex
 
-### Table of Contents
+Podex is a small starter for server-rendered web applications built with PowerShell,
+[Pode](https://github.com/Badgerati/Pode), and [htmx](https://htmx.org/). The backend
+serves Pode views and JSON endpoints; the browser uses htmx and
+[Mustache](https://mustache.github.io/) for the CRUD example.
 
-- [Introduction](#introduction)
-- [Features](#features)
-- [Technical Stack](#technical-stack)
-- [Setup](#setup)
-- [Running the Project](#running-the-project)
-- [Release Artifact](#release-artifact)
-- [Contributing](#contributing)
-- [License](#license)
+It includes:
 
-### Introduction
+- a SQLite-backed CRUD page with search, paging, create, edit, and delete actions;
+- file-based API handlers under `api/`;
+- Tailwind CSS, light and dark themes, and reusable Pode layouts and partials;
+- OpenAPI output at `/docs/openapi` and Swagger UI at `/docs/swagger`;
+- local-only database and server controls when `Podex.Debug` is enabled;
+- Pester, PSScriptAnalyzer, ESLint, Prettier, knip, and a single `smoke:qc` command.
 
-Podex is a framework for building full-stack web applications using PowerShell/Pode for the backend and htmx for the frontend.
+## Requirements
 
-### Features
+- PowerShell 7
+- Bun
+- PSSQLite 1.x (runtime)
+- Pode 2.x (runtime)
 
-- **Home page:** overview of Podex and its technology choices as a server-rendered Pode view.
-- **CRUD Manager:** list, search, paginate, add, update, and delete items against SQLite via htmx and client-side Mustache templates, with loading, empty, and error states.
-- **File-based JSON API:** `GET/POST/PUT/DELETE /api/crud` with parameterized SQLite queries and validated, status-coded responses.
-- **htmx fragment endpoint:** HTML-only partial responses (e.g. the add-item modal form).
-- **OpenAPI + Swagger:** spec at `/docs/openapi` and interactive UI at `/docs/swagger` for `/api/*`.
-- **Pode view engine:** layouts, partials, and reusable components with Tailwind CSS theming (light/dark compatible).
-- **Debug-only routes:** database init/clear and server-stop helpers, registered only when `Podex.Debug` is enabled.
-- **Quality gates:** formatting, ESLint, PSScriptAnalyzer, Pester tests, Tailwind CSS build, and knip via `bun` scripts, plus foreground/background server lifecycle (`dev`/`start`/`stop`) and an aggregate `smoke:qc`.
+The build installs Pode and the development PowerShell modules. PSSQLite remains a manual
+prerequisite:
 
-### Technical Stack
+```powershell
+Install-Module -Name PSSQLite -MinimumVersion 1.1.0 -MaximumVersion 1.99.99 -Scope CurrentUser
+```
 
-- **Backend**: [PowerShell Core](https://github.com/PowerShell/PowerShell), [Pode](https://github.com/Badgerati/Pode), [SQLite](https://www.sqlite.org/index.html)
-- **Frontend**: [htmx](https://htmx.org/), [Mustache](https://mustache.github.io/), [Tailwind CSS](https://tailwindcss.com/)
+## Setup
 
-### Setup
+```powershell
+git clone https://github.com/NomadicDaddy/podex.git
+Set-Location podex
+bun run build
+```
 
-1. Clone the repository:
+The CRUD example expects `data/podex.db`. To create it from the checked-in schema:
 
-    ```sh
-    git clone https://github.com/NomadicDaddy/podex.git
-    cd podex
-    ```
+```powershell
+New-Item -ItemType Directory -Path data -Force | Out-Null
+$sql = Get-Content -Raw api/debug/init.sql
+Invoke-SqliteQuery -DataSource data/podex.db -Query $sql
+```
 
-2. Install dependencies:
+## Run Podex
 
-    ```sh
-    bun install
-    ```
+Use `bun run dev` for a foreground server, or `bun run start` to run it in the background.
+The app listens at `http://localhost:8433` by default.
 
-3. Install PowerShell modules:
-    ```sh
-    powershell -Command ". ./.build.ps1"
-    ```
+```powershell
+bun run dev
+bun run start
+bun run stop
+```
 
-### Running the Project
+## Checks and releases
 
-1. Start the server:
+`bun run smoke:qc` runs the PowerShell analyzer, ESLint, Pester, license checks, release
+packaging, formatting, and knip. It reports all failed gates before exiting.
 
-    ```sh
-    bun run start
-    ```
+`bun run release` rebuilds the browser assets and stages the files listed in
+`release-manifest.json` under `dist/podex-<version>/`. Pode and PSSQLite stay external;
+`node_modules` is not included.
 
-2. Open your browser and navigate to `http://localhost:8433`.
+## Contributing
 
-### Release Artifact
+Run `bun run smoke:qc` before opening a pull request. Keep dependency changes in
+`package.json` and `bun.lock`, and regenerate the license documents with
+`bun run licenses:generate` when the dependency graph changes.
 
-Run `bun run release` to build the browser assets, verify the generated third-party license
-documents, and stage the defined release under `dist/podex-<version>/`. The exact contents are
-listed in `release-manifest.json`. The release excludes `node_modules` and installed PowerShell
-modules; Pode and PSSQLite remain external runtime prerequisites.
+## License
 
-### Contributing
-
-1. Fork the repository.
-2. Create a new branch (`git checkout -b feature-branch`).
-3. Make your changes.
-4. Commit your changes (`git commit -am 'Add new feature'`).
-5. Push to the branch (`git push origin feature-branch`).
-6. Create a new Pull Request.
-
-### License
-
-This project is licensed under the MIT License.
+Podex is available under the [MIT License](LICENSE). Third-party terms are listed in
+[THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md), with full notices in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

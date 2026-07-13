@@ -7,56 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-13
+
+### Added
+
+- Generated license documents for shipped browser assets, external PowerShell modules, and
+  build-only dependencies such as Lightning CSS and Sharp/libvips.
+- `bun run release`, which stages the files listed in `release-manifest.json` and checks that the
+  required notices are included.
+
+### Changed
+
+- Builds now use the frozen Bun lockfile and one browser asset command for htmx, Mustache, the
+  adapted extensions, and Tailwind CSS.
+- `smoke:qc` now checks license drift and inspects a staged release.
+
+### Fixed
+
+- Mustache and Tailwind files served to the browser now include their required notices.
+
+### Security
+
+- Release manifest entries are confined to the project and staging roots. Release checks reject
+  dependency trees, Git metadata, databases, and missing notice files.
+
 ## [0.2.0] - 2026-07-11
 
 ### Added
 
-- Server lifecycle scripts: a blocking foreground launcher (`bun run dev`) and a detached,
-  non-blocking background launcher (`bun run start`) with graceful-first stop (`bun run stop`),
-  modeled on a hardened detached-spawn pattern that does not inherit or pin the listening socket.
-- An aggregate quality gate `bun run smoke:qc` that runs PSScriptAnalyzer, ESLint, Pester, the
-  Tailwind CSS build, a Prettier format check, and knip, reporting every failure rather than
-  stopping at the first.
-- htmx 4 client-side extension ports (debug, json-enc, client-side-templates) maintained under
-  `src/vendor/` and copied to `public/js` by the build, replacing the htmx 2.x npm extensions
-  after the `htmx.org` 4.x upgrade.
-- A loopback guard that restricts the debug routes (`/stop`, `/clear`, `/init`) to localhost even
-  when `Podex.Debug` is enabled.
-- knip dead-code configuration and project capability blueprints under `.aidd/features/`, plus a
-  Features section in the README documenting the current capabilities.
+- Server lifecycle commands for foreground development, background start, and graceful stop.
+- `bun run smoke:qc` for PSScriptAnalyzer, ESLint, Pester, the Tailwind build, formatting, and knip.
+- Maintained htmx 4 ports of the debug, json-enc, and client-side-templates extensions under
+  `src/vendor/`.
+- A loopback guard for the debug routes `/stop`, `/clear`, and `/init`.
+- knip configuration and project capability records under `.aidd/features/`.
 
 ### Changed
 
-- Migrated the JavaScript toolchain from npm/npx to bun/bunx across package scripts, the build,
-  and documentation.
-- Unified the Tailwind theme: the primary color scale now matches the brand header/footer, the
-  typography plugin is enabled, and Home and CRUD Manager share consistent card/site-shell styling
-  with a reserved scrollbar gutter that removes the inter-page layout shift.
-- CRUD Manager Update controls are now inline-editable text fields (previously hidden inputs), so
-  item and description edits persist through `PUT /api/crud`.
-- The example SQLite database now lives under `data/` at the repository root (default
-  `./data/podex.db`) instead of the repository root.
+- Migrated the JavaScript toolchain from npm and npx to Bun.
+- Updated the Tailwind theme, enabled the typography plugin, and aligned the Home and CRUD Manager
+  layouts.
+- Made the CRUD Manager update controls editable inline.
+- Moved the example SQLite database to `data/podex.db`.
 
 ### Fixed
 
-- CRUD persistence now works end to end: SQLite errors escalate to real 500 responses (PSSQLite's
-  non-terminating errors were previously swallowed, masking a missing table as fake success), and
-  the canonical `items` table is created from `api/debug/init.sql`. The CRUD handlers, schema,
-  views, and tests are aligned on one `items` model.
-- CRUD pagination now reports the true matching row count via a separate `SELECT COUNT(*)` instead
-  of the current page length, so page counts and navigation are correct beyond the first page.
-- The debug `/init` and `/clear` routes now resolve their SQL files at `./api/debug/` (previously
-  read `./init.sql`/`./clear.sql` from the project root and returned 500).
-- Prettier no longer corrupts `.pode` templates: the HTML-parser override was removed and `.pode`
-  files are ignored, and the Tailwind v4 stylesheet is configured via `tailwindStylesheet`.
-- The ESLint flat config now enables browser and Node globals and ignores the vendored `public/js`
-  distribution files.
+- CRUD persistence now reports SQLite failures correctly, creates the `items` table from
+  `api/debug/init.sql`, and uses the same model in handlers, views, and tests.
+- Pagination now counts all matching rows instead of only the current page.
+- The `/init` and `/clear` routes now find their SQL files under `api/debug/`.
+- Prettier no longer treats `.pode` files as HTML, and it uses the Tailwind v4 stylesheet setting.
+- ESLint now recognizes browser and Node globals and ignores generated files under `public/js/`.
 
 ### Security
 
-- Destructive debug routes are disabled by default (`Podex.Debug = $false`); route registration
-  skips `api/debug/*` entirely when debug is off, and the dedicated
-  `tests/debug-route-isolation.Tests.ps1` asserts the gating. When debug is enabled, the new
-  loopback guard keeps those endpoints local-only.
+- Destructive debug routes are disabled by default and are not registered unless `Podex.Debug` is
+  enabled. When enabled, they remain local-only.
 
 Versions prior to 0.2.0 predate this changelog.
