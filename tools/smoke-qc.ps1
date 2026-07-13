@@ -19,7 +19,8 @@ $gates = @(
 	@{ Name = 'analyze'; Cmd = { bun run analyze } },
 	@{ Name = 'lint'; Cmd = { bun run lint } },
 	@{ Name = 'test'; Cmd = { bun run test } },
-	@{ Name = 'css'; Cmd = { bun run css } },
+	@{ Name = 'check:licenses'; Cmd = { bun run check:licenses } },
+	@{ Name = 'release'; Cmd = { bun run release } },
 	@{ Name = 'format:check'; Cmd = { bun run format:check } },
 	@{ Name = 'knip'; Cmd = { bunx knip } }
 )

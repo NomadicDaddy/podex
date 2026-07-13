@@ -17,6 +17,12 @@ const config = {
 	plugins: ['prettier-plugin-sql', 'prettier-plugin-tailwindcss'],
 	overrides: [
 		{
+			files: ['scripts/**/*.mjs'],
+			options: {
+				printWidth: 100,
+			},
+		},
+		{
 			files: ['*.sql'],
 			options: {
 				language: 'sqlite',

@@ -9,6 +9,7 @@ package-lock.json
 .aidd/
 .vscode/
 data/
+dist/
 public/css/output.css
 public/js/
 api/crud/*.json

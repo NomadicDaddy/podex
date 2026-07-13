@@ -7,6 +7,7 @@
 - [Technical Stack](#technical-stack)
 - [Setup](#setup)
 - [Running the Project](#running-the-project)
+- [Release Artifact](#release-artifact)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -59,6 +60,13 @@ Podex is a framework for building full-stack web applications using PowerShell/P
     ```
 
 2. Open your browser and navigate to `http://localhost:8433`.
+
+### Release Artifact
+
+Run `bun run release` to build the browser assets, verify the generated third-party license
+documents, and stage the defined release under `dist/podex-<version>/`. The exact contents are
+listed in `release-manifest.json`. The release excludes `node_modules` and installed PowerShell
+modules; Pode and PSSQLite remain external runtime prerequisites.
 
 ### Contributing
 

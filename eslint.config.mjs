@@ -4,7 +4,7 @@ import globals from 'globals';
 export default [
 	{
 		// Globally ignored: vendored/copied distribution libs are not linted
-		ignores: ['public/js/**', 'node_modules/**', 'logs/**', '.vscode/**'],
+		ignores: ['public/js/**', 'dist/**', 'node_modules/**', 'logs/**', '.vscode/**'],
 	},
 	{
 		languageOptions: {
