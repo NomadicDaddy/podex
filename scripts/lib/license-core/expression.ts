@@ -1,0 +1,224 @@
+export type LicenseExpression =
+	| { exception: string; kind: 'with'; license: string }
+	| { id: string; kind: 'license' }
+	| { kind: 'and' | 'or'; left: LicenseExpression; right: LicenseExpression };
+
+type Token = { kind: 'and' | 'atom' | 'left' | 'or' | 'right' | 'with'; value: string };
+
+const IDENTIFIER =
+	/^(?:(?:DocumentRef-[A-Za-z0-9.-]+:)?LicenseRef-[A-Za-z0-9.-]+|[A-Za-z0-9][A-Za-z0-9.-]*\+?)$/;
+const UNKNOWN_LICENSE = /^(?:UNKNOWN|UNLICENSED|SEE LICENSE IN|N\/?A|\*)/i;
+
+function tokenize(raw: string): Token[] {
+	const tokens: Token[] = [];
+	let offset = 0;
+
+	while (offset < raw.length) {
+		const whitespace = /^\s+/.exec(raw.slice(offset));
+		if (whitespace) {
+			offset += whitespace[0].length;
+			continue;
+		}
+
+		const character = raw[offset];
+		if (character === '(' || character === ')') {
+			tokens.push({
+				kind: character === '(' ? 'left' : 'right',
+				value: character,
+			});
+			offset += 1;
+			continue;
+		}
+
+		const match = /^[^\s()]+/.exec(raw.slice(offset));
+		if (!match) throw new Error(`Unexpected character at offset ${offset}.`);
+		const value = match[0];
+		const operator = value.toUpperCase();
+		const kind =
+			operator === 'AND' || operator === 'OR' || operator === 'WITH'
+				? (operator.toLowerCase() as 'and' | 'or' | 'with')
+				: 'atom';
+		tokens.push({ kind, value });
+		offset += value.length;
+	}
+
+	return tokens;
+}
+
+class Parser {
+	private offset = 0;
+	private readonly tokens: readonly Token[];
+
+	public constructor(tokens: readonly Token[]) {
+		this.tokens = tokens;
+	}
+
+	public parse(): LicenseExpression {
+		if (this.tokens.length === 0) throw new Error('License expression is empty.');
+		const expression = this.parseOr();
+		const remaining = this.peek();
+		if (remaining) throw new Error(`Unexpected token "${remaining.value}".`);
+		return expression;
+	}
+
+	private consume(kind?: Token['kind']): Token {
+		const token = this.tokens[this.offset];
+		if (!token) throw new Error('Unexpected end of license expression.');
+		if (kind !== undefined && token.kind !== kind) {
+			throw new Error(`Expected ${kind}, received "${token.value}".`);
+		}
+		this.offset += 1;
+		return token;
+	}
+
+	private parseAnd(): LicenseExpression {
+		let expression = this.parseWith();
+		while (this.peek()?.kind === 'and') {
+			this.consume('and');
+			expression = { kind: 'and', left: expression, right: this.parseWith() };
+		}
+		return expression;
+	}
+
+	private parseOr(): LicenseExpression {
+		let expression = this.parseAnd();
+		while (this.peek()?.kind === 'or') {
+			this.consume('or');
+			expression = { kind: 'or', left: expression, right: this.parseAnd() };
+		}
+		return expression;
+	}
+
+	private parsePrimary(): LicenseExpression {
+		if (this.peek()?.kind === 'left') {
+			this.consume('left');
+			const expression = this.parseOr();
+			this.consume('right');
+			return expression;
+		}
+
+		const token = this.consume('atom');
+		if (!IDENTIFIER.test(token.value)) {
+			throw new Error(`Invalid SPDX identifier "${token.value}".`);
+		}
+		return { id: token.value, kind: 'license' };
+	}
+
+	private parseWith(): LicenseExpression {
+		const expression = this.parsePrimary();
+		if (this.peek()?.kind !== 'with') return expression;
+		if (expression.kind !== 'license') {
+			throw new Error('WITH must follow a simple license identifier.');
+		}
+
+		this.consume('with');
+		const exception = this.consume('atom').value;
+		if (!IDENTIFIER.test(exception) || exception.endsWith('+')) {
+			throw new Error(`Invalid SPDX exception "${exception}".`);
+		}
+		return { exception, kind: 'with', license: expression.id };
+	}
+
+	private peek(): Token | undefined {
+		return this.tokens[this.offset];
+	}
+}
+
+export interface LicenseReviewPolicy {
+	aliases?: Readonly<Record<string, string>>;
+	reviewed: ReadonlySet<string>;
+}
+
+export interface LicenseReviewResult {
+	error?: string;
+	ok: boolean;
+	unreviewed: string[];
+}
+
+function canonical(identifier: string, policy: LicenseReviewPolicy): string {
+	return policy.aliases?.[identifier] ?? identifier;
+}
+
+function collectUnreviewed(
+	expression: LicenseExpression,
+	policy: LicenseReviewPolicy,
+	result: Set<string>
+): void {
+	if (expression.kind === 'license') {
+		const identifier = canonical(expression.id, policy);
+		if (!policy.reviewed.has(identifier)) result.add(expression.id);
+		return;
+	}
+	if (expression.kind === 'with') {
+		const license = canonical(expression.license, policy);
+		const compound = `${license} WITH ${expression.exception}`;
+		if (!policy.reviewed.has(compound)) result.add(compound);
+		return;
+	}
+	collectUnreviewed(expression.left, policy, result);
+	collectUnreviewed(expression.right, policy, result);
+}
+
+export function parseLicenseExpression(raw: string): LicenseExpression {
+	return new Parser(tokenize(raw.trim())).parse();
+}
+
+function collectIdentifiers(expression: LicenseExpression, result: Set<string>): void {
+	if (expression.kind === 'license') {
+		result.add(expression.id);
+		return;
+	}
+	if (expression.kind === 'with') {
+		result.add(`${expression.license} WITH ${expression.exception}`);
+		return;
+	}
+	collectIdentifiers(expression.left, result);
+	collectIdentifiers(expression.right, result);
+}
+
+/**
+ * The distinct license identifiers named in an SPDX expression — every simple license and every
+ * `license WITH exception` compound. Returns [] when the expression does not parse. Lets a caller
+ * attach per-identifier notices to a dependency whose license is a compound expression, instead of
+ * keying notices on the raw expression string (which no `NOTICES` table would ever contain).
+ */
+export function licenseIdentifiers(raw: string): string[] {
+	try {
+		const identifiers = new Set<string>();
+		collectIdentifiers(parseLicenseExpression(raw), identifiers);
+		return [...identifiers];
+	} catch {
+		return [];
+	}
+}
+
+/**
+ * Reviews every branch of an SPDX expression. Requiring every OR branch to be reviewed is
+ * intentionally conservative: the gate never selects a distribution license on the user's behalf.
+ */
+export function reviewLicenseExpression(
+	raw: string,
+	policy: LicenseReviewPolicy
+): LicenseReviewResult {
+	const value = raw.trim();
+	if (value.length === 0 || UNKNOWN_LICENSE.test(value)) {
+		return {
+			error: `Missing or unknown license "${value || '<empty>'}".`,
+			ok: false,
+			unreviewed: [],
+		};
+	}
+
+	try {
+		const expression = parseLicenseExpression(value);
+		const unreviewed = new Set<string>();
+		collectUnreviewed(expression, policy, unreviewed);
+		return { ok: unreviewed.size === 0, unreviewed: [...unreviewed].sort() };
+	} catch (err) {
+		return {
+			error: err instanceof Error ? err.message : String(err),
+			ok: false,
+			unreviewed: [],
+		};
+	}
+}

@@ -24,6 +24,24 @@ export const restrictiveLicensePatterns = [
 	'PROPRIETARY',
 ];
 
+/** License families reviewed for Podex's installed npm tooling and emitted browser assets. */
+export const reviewedLicenses = new Set([
+	'0BSD',
+	'Apache-2.0',
+	'BlueOak-1.0.0',
+	'BSD-2-Clause',
+	'BSD-3-Clause',
+	'CC0-1.0',
+	'ISC',
+	'LGPL-3.0-or-later',
+	'MIT',
+	'MPL-2.0',
+	'Python-2.0',
+	'Unlicense',
+]);
+
+export const licenseAliases = { 'BSD-0-Clause': '0BSD' };
+
 /**
  * Returns true when a raw license string matches a restrictive, source-available,
  * non-commercial, proprietary, or ambiguous pattern.

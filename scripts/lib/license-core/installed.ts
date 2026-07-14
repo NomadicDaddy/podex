@@ -1,0 +1,126 @@
+import { readFile, readdir, realpath } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { licenseOf, type PackageManifest } from './manifest.ts';
+import { byCodepoint } from './order.ts';
+
+export interface InstalledPackage {
+	directory: string;
+	license: string;
+	manifest: PackageManifest;
+	name: string;
+	version: string;
+}
+
+async function packageDirectories(nodeModules: string): Promise<string[]> {
+	let entries;
+	try {
+		entries = await readdir(nodeModules, { withFileTypes: true });
+	} catch {
+		return [];
+	}
+
+	const directories: string[] = [];
+	for (const entry of entries) {
+		if (!entry.isDirectory() && !entry.isSymbolicLink()) continue;
+		if (entry.name === '.bin' || entry.name === '.cache' || entry.name === '.bun') continue;
+		const path = join(nodeModules, entry.name);
+		if (!entry.name.startsWith('@')) {
+			directories.push(path);
+			continue;
+		}
+
+		let scoped;
+		try {
+			scoped = await readdir(path, { withFileTypes: true });
+		} catch {
+			continue;
+		}
+		for (const child of scoped) {
+			if (child.isDirectory() || child.isSymbolicLink()) {
+				directories.push(join(path, child.name));
+			}
+		}
+	}
+	return directories;
+}
+
+async function storeNodeModules(root: string): Promise<string[]> {
+	const store = join(root, 'node_modules', '.bun');
+	let entries;
+	try {
+		entries = await readdir(store, { withFileTypes: true });
+	} catch {
+		return [];
+	}
+	return entries
+		.filter((entry) => entry.isDirectory())
+		.map((entry) => join(store, entry.name, 'node_modules'));
+}
+
+/**
+ * Reads a package manifest, distinguishing "no manifest here" (an ordinary non-package
+ * directory, skipped) from "a manifest that exists but does not parse". The latter is a package
+ * we cannot classify, so it throws and fails the gate closed rather than being silently skipped.
+ */
+async function readManifest(path: string): Promise<null | PackageManifest> {
+	let raw: string;
+	try {
+		raw = await readFile(path, 'utf8');
+	} catch {
+		return null;
+	}
+	try {
+		return JSON.parse(raw) as PackageManifest;
+	} catch (err) {
+		throw new Error(`Unreadable package manifest at ${path}.`, { cause: err });
+	}
+}
+
+export async function collectInstalledPackages(
+	root: string,
+	workspaces: readonly string[]
+): Promise<InstalledPackage[]> {
+	const roots = [root, ...workspaces.map((workspace) => join(root, workspace))];
+	const pending = roots.map((path) => join(path, 'node_modules'));
+	for (const path of roots) pending.push(...(await storeNodeModules(path)));
+
+	const packages = new Map<string, InstalledPackage>();
+	const visited = new Set<string>();
+	const scannedTrees = new Set<string>();
+
+	while (pending.length > 0) {
+		const nodeModules = pending.shift();
+		if (nodeModules === undefined) continue;
+		const treeKey = await realpath(nodeModules).catch(() => nodeModules);
+		if (scannedTrees.has(treeKey)) continue;
+		scannedTrees.add(treeKey);
+
+		for (const directory of await packageDirectories(nodeModules)) {
+			// Descend into each package's own node_modules so nested, version-conflicted copies
+			// are scanned too. Without this a hoisted copy hides the nested one, and the nested
+			// copy's (possibly different, possibly restrictive) license is never read.
+			pending.push(join(directory, 'node_modules'));
+
+			const resolved = await realpath(directory).catch(() => directory);
+			if (visited.has(resolved)) continue;
+			visited.add(resolved);
+			const manifest = await readManifest(join(directory, 'package.json'));
+			if (manifest === null) continue;
+			const name = typeof manifest.name === 'string' ? manifest.name : '';
+			const version = typeof manifest.version === 'string' ? manifest.version : '';
+			if (name.length === 0 || version.length === 0) continue;
+			packages.set(`${name}@${version}`, {
+				directory,
+				license: licenseOf(manifest),
+				manifest,
+				name,
+				version,
+			});
+		}
+	}
+
+	return [...packages.values()].sort(
+		(a, b) => byCodepoint(a.name, b.name) || byCodepoint(a.version, b.version)
+	);
+}

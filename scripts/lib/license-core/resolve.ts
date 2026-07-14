@@ -1,0 +1,116 @@
+import { readdir, readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { readJson } from './manifest.ts';
+
+const LICENSE_FILENAMES = [
+	'LICENSE',
+	'LICENSE.md',
+	'LICENSE.txt',
+	'LICENCE',
+	'LICENCE.md',
+	'LICENCE.txt',
+	'LICENSE-MIT',
+	'LICENSE-APACHE',
+	'COPYING',
+	'COPYING.md',
+];
+const NOTICE_FILENAMES = ['NOTICE', 'NOTICE.md', 'NOTICE.txt'];
+
+async function readFirstMatching(dir: string, candidates: string[]): Promise<null | string> {
+	let entries: string[];
+	try {
+		entries = await readdir(dir);
+	} catch {
+		return null;
+	}
+
+	const names = new Map(entries.map((entry) => [entry.toLowerCase(), entry]));
+	for (const candidate of candidates) {
+		const actual = names.get(candidate.toLowerCase());
+		if (!actual) continue;
+		try {
+			const text = await readFile(join(dir, actual), 'utf8');
+			if (text.trim().length > 0) return text.trim();
+		} catch {
+			// An unreadable candidate is not usable notice material; try the next name.
+		}
+	}
+	return null;
+}
+
+export async function readLicenseText(dir: string): Promise<null | string> {
+	return await readFirstMatching(dir, LICENSE_FILENAMES);
+}
+
+export async function readNoticeText(dir: string): Promise<null | string> {
+	return await readFirstMatching(dir, NOTICE_FILENAMES);
+}
+
+async function storeCopies(root: string, name: string): Promise<string[]> {
+	const store = join(root, 'node_modules', '.bun');
+	const encoded = name.replace('/', '+');
+	let entries: string[];
+	try {
+		entries = await readdir(store);
+	} catch {
+		return [];
+	}
+
+	return entries
+		.filter((entry) => entry.startsWith(`${encoded}@`))
+		.sort()
+		.map((entry) => join(store, entry, 'node_modules', name));
+}
+
+async function findNestedVersion(
+	nodeModules: string,
+	name: string,
+	version: string,
+	depth: number
+): Promise<null | string> {
+	if (depth > 5) return null;
+	let entries;
+	try {
+		entries = await readdir(nodeModules, { withFileTypes: true });
+	} catch {
+		return null;
+	}
+
+	for (const entry of entries) {
+		if (!entry.isDirectory() && !entry.isSymbolicLink()) continue;
+		if (entry.name === '.bin' || entry.name === '.cache' || entry.name === '.bun') continue;
+		const packageDir = join(nodeModules, entry.name);
+		const nested = join(packageDir, 'node_modules', name);
+		if ((await readJson(join(nested, 'package.json')))?.version === version) return nested;
+		const found = await findNestedVersion(
+			join(packageDir, 'node_modules'),
+			name,
+			version,
+			depth + 1
+		);
+		if (found !== null) return found;
+	}
+	return null;
+}
+
+export async function resolveInstalledPackage(
+	root: string,
+	workspaces: readonly string[],
+	name: string,
+	version: string
+): Promise<null | string> {
+	const encoded = name.replace('/', '+');
+	const candidates = [
+		join(root, 'node_modules', '.bun', `${encoded}@${version}`, 'node_modules', name),
+		...(await storeCopies(root, name)),
+		join(root, 'node_modules', name),
+		...workspaces.map((workspace) => join(root, workspace, 'node_modules', name)),
+	];
+
+	for (const candidate of candidates) {
+		if ((await readJson(join(candidate, 'package.json')))?.version === version)
+			return candidate;
+	}
+	return await findNestedVersion(join(root, 'node_modules'), name, version, 0);
+}

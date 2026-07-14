@@ -177,7 +177,26 @@ async function main() {
 	const directRuntime = Object.keys(rootManifest.dependencies ?? {}).sort();
 	const directDevelopment = Object.keys(rootManifest.devDependencies ?? {}).sort();
 	const directPackages = [...new Set([...directRuntime, ...directDevelopment])].sort();
-	const graph = await collectClosure(root, directPackages);
+	const graph = await collectClosure(root);
+
+	// The closure is a listing of what is installed, so a declared-but-absent dependency would
+	// simply not appear rather than failing the scan. Re-derive the reachability guarantee: every
+	// non-optional dependency declared by an installed package must itself be installed, otherwise
+	// the closure is incomplete and we would report a pass over a tree whose licenses we never read.
+	const present = new Set(graph.map((entry) => entry.name));
+	const missing = new Set();
+	for (const entry of graph) {
+		for (const dependency of Object.keys(entry.manifest.dependencies ?? {})) {
+			if (!present.has(dependency)) missing.add(`${dependency} (required by ${entry.name})`);
+		}
+	}
+	if (missing.size > 0) {
+		throw new Error(
+			`Declared dependencies are missing from the installed tree, so the license closure is ` +
+				`incomplete: ${[...missing].sort().join(', ')}. Run \`bun install --frozen-lockfile\`.`
+		);
+	}
+
 	const unknown = graph.filter((entry) => entry.license === 'UNKNOWN');
 	if (unknown.length > 0) {
 		throw new Error(

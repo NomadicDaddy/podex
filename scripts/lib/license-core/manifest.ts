@@ -1,0 +1,48 @@
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+export type PackageManifest = Record<string, unknown>;
+
+export async function readJson(path: string): Promise<null | PackageManifest> {
+	try {
+		return JSON.parse(await readFile(path, 'utf8')) as PackageManifest;
+	} catch {
+		return null;
+	}
+}
+
+export function licenseOf(manifest: null | PackageManifest): string {
+	if (manifest === null) return 'UNKNOWN';
+
+	const license = manifest.license;
+	if (typeof license === 'string' && license.trim().length > 0) return license.trim();
+	if (typeof license === 'object' && license !== null && 'type' in license) {
+		const type = (license as { type?: unknown }).type;
+		if (typeof type === 'string' && type.trim().length > 0) return type.trim();
+	}
+
+	const licenses = manifest.licenses;
+	if (!Array.isArray(licenses) || licenses.length === 0) return 'UNKNOWN';
+
+	// A malformed entry contributes the literal 'UNKNOWN' rather than being dropped: discarding it
+	// would let a package judged on its readable branch alone (e.g. `[{type:'MIT'}, {url:'…'}]` ->
+	// 'MIT') slip past the allowlist, where the honest reading is 'MIT OR UNKNOWN' -> fail closed.
+	const values = licenses.map((entry) => {
+		if (typeof entry === 'string' && entry.trim().length > 0) return entry.trim();
+		if (typeof entry === 'object' && entry !== null && 'type' in entry) {
+			const type = (entry as { type?: unknown }).type;
+			if (typeof type === 'string' && type.trim().length > 0) return type.trim();
+		}
+		return 'UNKNOWN';
+	});
+	return values.join(' OR ');
+}
+
+export async function workspaceNames(root: string, workspaces: string[]): Promise<Set<string>> {
+	const names = new Set<string>();
+	for (const workspace of ['', ...workspaces]) {
+		const manifest = await readJson(join(root, workspace, 'package.json'));
+		if (typeof manifest?.name === 'string') names.add(manifest.name);
+	}
+	return names;
+}

@@ -1,0 +1,173 @@
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { byCodepoint } from './order.ts';
+
+export type RootDependencyField = 'dependencies' | 'devDependencies' | 'optionalDependencies';
+
+export interface LockedPackage {
+	name: string;
+	version: string;
+}
+
+interface LockEntry {
+	dependencies?: Record<string, string>;
+	optionalDependencies?: Record<string, string>;
+	optionalPeers?: string[];
+	peerDependencies?: Record<string, string>;
+}
+
+interface QueueEntry {
+	fromChain: string[];
+	fromName: null | string;
+	name: string;
+	optional: boolean;
+}
+
+function parseLockfile(text: string): {
+	packages: Record<string, unknown>;
+	workspaces: Record<string, unknown>;
+} {
+	const parsed = JSON.parse(text.replace(/,(\s*[}\]])/g, '$1')) as Record<string, unknown>;
+	return {
+		packages: (parsed.packages ?? {}) as Record<string, unknown>,
+		workspaces: (parsed.workspaces ?? {}) as Record<string, unknown>,
+	};
+}
+
+function packageEntry(value: unknown): { meta: LockEntry; spec: string } | null {
+	if (!Array.isArray(value) || typeof value[0] !== 'string') return null;
+	// Bun places the dependency-metadata object at different offsets depending on how a package
+	// was resolved (registry vs git/github/tarball/folder). Locate it by shape rather than by a
+	// fixed index, so an entry whose meta is not element [2] still has its edges walked.
+	const meta = value.find(
+		(element) => typeof element === 'object' && element !== null && !Array.isArray(element)
+	);
+	return { meta: (meta as LockEntry | undefined) ?? {}, spec: value[0] };
+}
+
+function splitSpec(spec: string): LockedPackage | null {
+	const separator = spec.lastIndexOf('@');
+	if (separator <= 0) return null;
+	return { name: spec.slice(0, separator), version: spec.slice(separator + 1) };
+}
+
+function resolveKey(
+	packages: Record<string, unknown>,
+	fromChain: string[],
+	name: string
+): { chain: string[]; key: string } | null {
+	for (let depth = fromChain.length; depth >= 0; depth -= 1) {
+		const chain = [...fromChain.slice(0, depth), name];
+		const key = chain.join('/');
+		if (key in packages) return { chain, key };
+	}
+	return null;
+}
+
+function installedDependencies(
+	meta: LockEntry,
+	includePeerDependencies: boolean
+): { name: string; optional: boolean }[] {
+	const dependencies = Object.keys(meta.dependencies ?? {}).map((name) => ({
+		name,
+		optional: false,
+	}));
+	dependencies.push(
+		...Object.keys(meta.optionalDependencies ?? {}).map((name) => ({ name, optional: true }))
+	);
+
+	if (includePeerDependencies) {
+		const optionalPeers = new Set(meta.optionalPeers ?? []);
+		dependencies.push(
+			...Object.keys(meta.peerDependencies ?? {})
+				.filter((name) => !optionalPeers.has(name))
+				.map((name) => ({ name, optional: false }))
+		);
+	}
+	return dependencies;
+}
+
+export interface LockfileClosureOptions {
+	includePeerDependencies?: boolean;
+	internal: ReadonlySet<string>;
+	rootFields: readonly RootDependencyField[];
+	workspaces: readonly string[];
+}
+
+export async function collectLockfileClosure(
+	root: string,
+	options: LockfileClosureOptions
+): Promise<{ packages: LockedPackage[]; unresolved: string[] }> {
+	const lock = parseLockfile(await readFile(join(root, 'bun.lock'), 'utf8'));
+	const queue: QueueEntry[] = [];
+
+	for (const workspace of options.workspaces) {
+		const value = lock.workspaces[workspace];
+		if (typeof value !== 'object' || value === null) continue;
+		const manifest = value as Record<string, unknown>;
+		for (const field of options.rootFields) {
+			const declared = manifest[field];
+			if (typeof declared !== 'object' || declared === null) continue;
+			for (const name of Object.keys(declared as Record<string, unknown>)) {
+				if (!options.internal.has(name)) {
+					queue.push({ fromChain: [], fromName: null, name, optional: false });
+				}
+			}
+		}
+	}
+
+	const resolvedPackages = new Map<string, LockedPackage>();
+	const unresolved = new Set<string>();
+	const visited = new Set<string>();
+
+	while (queue.length > 0) {
+		const item = queue.shift();
+		if (item === undefined || options.internal.has(item.name)) continue;
+		const resolved = resolveKey(lock.packages, item.fromChain, item.name);
+		if (resolved === null) {
+			if (!item.optional) {
+				unresolved.add(
+					item.fromName ? `${item.name} (required by ${item.fromName})` : item.name
+				);
+			}
+			continue;
+		}
+		if (visited.has(resolved.key)) continue;
+		visited.add(resolved.key);
+
+		const entry = packageEntry(lock.packages[resolved.key]);
+		const locked = entry === null ? null : splitSpec(entry.spec);
+		if (entry === null || locked === null) {
+			// The key exists in the lockfile but the entry does not parse: surface it as
+			// unresolved rather than dropping a package (and its subtree) from the closure.
+			if (!item.optional) {
+				unresolved.add(
+					item.fromName ? `${item.name} (required by ${item.fromName})` : item.name
+				);
+			}
+			continue;
+		}
+		if (options.internal.has(locked.name)) continue;
+		resolvedPackages.set(`${locked.name}@${locked.version}`, locked);
+
+		for (const dependency of installedDependencies(
+			entry.meta,
+			options.includePeerDependencies ?? false
+		)) {
+			queue.push({
+				fromChain: resolved.chain,
+				fromName: locked.name,
+				name: dependency.name,
+				optional: dependency.optional,
+			});
+		}
+	}
+
+	return {
+		packages: [...resolvedPackages.values()].sort(
+			(a, b) => byCodepoint(a.name, b.name) || byCodepoint(a.version, b.version)
+		),
+		unresolved: [...unresolved].sort(byCodepoint),
+	};
+}

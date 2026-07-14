@@ -17,6 +17,12 @@ const config = {
 	plugins: ['prettier-plugin-tailwindcss'],
 	overrides: [
 		{
+			files: ['scripts/check-license-core.ts', 'scripts/lib/license-core/**/*.ts'],
+			options: {
+				printWidth: 100,
+			},
+		},
+		{
 			files: ['scripts/**/*.mjs'],
 			options: {
 				printWidth: 100,
