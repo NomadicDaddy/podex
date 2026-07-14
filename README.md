@@ -64,6 +64,13 @@ packaging, formatting, and knip. It reports all failed gates before exiting.
 `release-manifest.json` under `dist/podex-<version>/`. Pode and PSSQLite stay external;
 `node_modules` is not included.
 
+## Historical artifacts
+
+Tags `v0.2.0` and earlier predate the license-compliance tooling added in v0.3.0: their
+downloadable archives ship `public/js/mustache.js` without its MIT copyright notice and contain no
+third-party license documents. Use v0.3.0 or later. Before publishing a tag, verify its Mustache
+notice with `bun run release:check-tag <tag>`.
+
 ## Contributing
 
 Run `bun run smoke:qc` before opening a pull request. Keep dependency changes in

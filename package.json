@@ -30,6 +30,7 @@
 		"build": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass \"./.build.ps1\"",
 		"release:package": "bun run assets:build && bun run check:licenses && bun scripts/package-release.mjs",
 		"release:check": "bun scripts/check-release.mjs",
+		"release:check-tag": "bun scripts/check-tag-compliance.mjs",
 		"release": "bun run release:package && bun run release:check",
 		"dev": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass \"./tools/serve.ps1\"",
 		"start": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass \"./tools/serve.ps1\" -Background",
