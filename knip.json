@@ -1,6 +1,13 @@
 {
 	"$schema": "https://unpkg.com/knip@5/schema.json",
-	"entry": ["tools/optimize-images.js", "src/vendor/client-side-templates.js", "src/vendor/debug.js", "src/vendor/json-enc.js", "public/css/tailwind.css"],
+	"entry": [
+		"tools/optimize-images.js",
+		"src/vendor/client-side-templates.js",
+		"src/vendor/debug.js",
+		"src/vendor/json-enc.js",
+		"public/css/tailwind.css",
+		"tests/license-classification-harness.mjs"
+	],
 	"ignoreDependencies": ["htmx.org", "mustache"],
 	"ignoreBinaries": ["pwsh"]
 }

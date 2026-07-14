@@ -171,6 +171,14 @@ async function main() {
 			`Installed packages lack license metadata: ${unknown.map((entry) => `${entry.name}@${entry.version}`).join(', ')}`
 		);
 	}
+	const restrictive = graph.filter((entry) => entry.license === 'RESTRICTIVE');
+	if (restrictive.length > 0) {
+		throw new Error(
+			`Installed packages carry restrictive, source-available, non-commercial, or proprietary license terms that require manual review: ${restrictive
+				.map((entry) => `${entry.name}@${entry.version}`)
+				.join(', ')}. Resolve or exclude the package before generating license documents.`
+		);
+	}
 	const installed = new Map();
 
 	for (const name of new Set([...directRuntime, ...directDevelopment])) {

@@ -1,15 +1,22 @@
 import { access, readFile, realpath, readdir } from 'node:fs/promises';
 import { dirname, join, relative } from 'node:path';
 
-function normalizeLicense(manifest) {
-	if (typeof manifest.license === 'string') return manifest.license;
-	if (Array.isArray(manifest.licenses)) {
-		return manifest.licenses
-			.map((entry) => (typeof entry === 'string' ? entry : entry?.type))
-			.filter(Boolean)
-			.join(' OR ');
-	}
-	return 'UNKNOWN';
+import { isRestrictiveLicense } from './license-catalog.mjs';
+
+export function normalizeLicense(manifest) {
+	const raw =
+		typeof manifest.license === 'string'
+			? manifest.license
+			: Array.isArray(manifest.licenses)
+				? manifest.licenses
+						.map((entry) => (typeof entry === 'string' ? entry : entry?.type))
+						.filter(Boolean)
+						.join(' OR ')
+				: null;
+
+	if (raw === null) return 'UNKNOWN';
+	if (isRestrictiveLicense(raw)) return 'RESTRICTIVE';
+	return raw;
 }
 
 async function exists(path) {

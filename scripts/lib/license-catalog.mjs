@@ -8,6 +8,39 @@ export const browserAssets = [
 	},
 ];
 
+/**
+ * License patterns that require manual review before license documents can be generated.
+ *
+ * These cover restrictive, source-available, non-commercial, proprietary, and ambiguous
+ * markers that are not permissive SPDX licenses. A package whose license string matches
+ * any of these is classified as RESTRICTIVE by normalizeLicense, and the license gate
+ * fails closed until an operator resolves or excludes it.
+ */
+export const restrictiveLicensePatterns = [
+	'UNLICENSED',
+	'SEE LICENSE IN',
+	'BSL',
+	'BUSL',
+	'ELASTIC',
+	'COMMONS CLAUSE',
+	'CC-BY-NC',
+	'CC BY-NC',
+	'PROPRIETARY',
+];
+
+/**
+ * Returns true when a raw license string matches a restrictive, source-available,
+ * non-commercial, proprietary, or ambiguous pattern.
+ *
+ * The comparison is case-insensitive substring matching against each entry in
+ * restrictiveLicensePatterns. This intentionally errs toward flagging compound
+ * SPDX expressions containing a restrictive term (e.g. "MIT AND BSL-1.1").
+ */
+export function isRestrictiveLicense(raw) {
+	const upper = raw.toUpperCase();
+	return restrictiveLicensePatterns.some((pattern) => upper.includes(pattern.toUpperCase()));
+}
+
 export const externalModules = [
 	{
 		license: 'MIT',
