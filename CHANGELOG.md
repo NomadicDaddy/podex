@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `server.psd1` now sets `Web.ErrorPages.ShowExceptions = $false` in the checked-in default
+  configuration. Unhandled errors no longer render full PowerShell stack traces, module paths, and
+  source structure to the client. Because `ShowExceptions` and `Podex.Debug` are independent
+  settings, `Podex.Debug` alone never exposes exception detail; an operator must explicitly edit
+  both to `$true` to see local exception detail during development. Added
+  `tests/error-page-disclosure.Tests.ps1` with three Pester tests asserting the checked-in default
+  disables `ShowExceptions` and `Podex.Debug`.
+
 - `api/crud/get.ps1` now parses `page` and `pageSize` with `[int]::TryParse` instead of hard-casting
   request values, which previously threw a cast exception for non-numeric inputs. Missing,
   non-numeric, zero, or negative values fall back to the documented defaults (`page=1`,

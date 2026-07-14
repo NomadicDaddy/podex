@@ -21,7 +21,7 @@
 	}
 	Web = @{
 		ErrorPages = @{
-			ShowExceptions = $true
+			ShowExceptions = $false
 		}
 		Static = @{
 			Cache = @{
