@@ -28,7 +28,7 @@
 		$params['offset'] = $offset
 
 		# Total matching rows (independent of pagination) for accurate page metadata
-		$countSql = "SELECT COUNT(*) AS n FROM [items]"
+		$countSql = "SELECT COUNT(*) AS totalItems FROM [items]"
 		$countParams = @{}
 		if ($search) {
 			$countSql += " WHERE ([item] LIKE @search OR [description] LIKE @search)"
