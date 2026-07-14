@@ -7,7 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-14
+
+### Added
+
+- `bun run release:check-tag <tag>`, which reads `public/js/mustache.js` from the named git tag and
+  fails when the MIT copyright notice ("Copyright (c) 2009 Chris Wanstrath") is absent or the file
+  cannot be read.
+- A "Historical artifacts" section in README.md directing recipients of tags before v0.3.0 to use
+  v0.3.0 or later.
+
+### Changed
+
+- Browser assets now build only the unminified htmx and Mustache files used by the application.
+  Asset-build packages are classified as development dependencies, and generated release-license
+  documents no longer serialize platform-specific optional build packages, which vary by host.
+  Host-neutral copyleft build components remain disclosed, and `release:check` now enforces that
+  the copyleft section and the Lightning CSS distribution boundary survive regeneration.
+- The About page now uses explicit Tailwind utilities instead of the Typography plugin.
+
+### Removed
+
+- The `/htmx/hello` example route and its `htmx/hello.ps1` handler. The htmx fragment convention is
+  still demonstrated by `/htmx/item-new`, which the CRUD Manager uses. Anyone who called
+  `/htmx/hello` directly will now get a 404.
+- The vendored htmx debug extension (`src/vendor/debug.js`) and the `debug.js` script tag on every
+  page. It logged htmx lifecycle events and was never enabled outside local experimentation.
+- The minified `htmx.min.js` and `mustache.min.js` browser assets. Nothing loaded them; pages have
+  always used the unminified files.
+- The Sharp image optimizer (`tools/optimize-images.js`), the Knip gate, and the SQL Prettier
+  plugin, none of which were reachable from the build. `bun run smoke:qc` no longer runs `knip`.
+- The obsolete `tests/tests.ps1.old` CRUD test backup, superseded by the Pester suite under
+  `tests/`.
+
 ### Fixed
+
+- The Pester command now returns a nonzero process exit code when the run does not pass, correctly
+  failing `smoke:qc` without leaving a test-results artifact in the repository. The gate keys on the
+  overall Pester result, so a test file that fails during discovery also fails the build instead of
+  reporting zero failed tests.
 
 - `server.psd1` now sets `Web.ErrorPages.ShowExceptions = $false` in the checked-in default
   configuration. Unhandled errors no longer render full PowerShell stack traces, module paths, and
@@ -28,14 +66,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   tree on every list request and logged the entire serialized body via `Write-FormattedLog`. Both
   are removed; only bounded metadata (`"Items found: <count>"`) is logged. Added a Pester test that
   runs `GET /api/crud` with debug enabled and asserts no snapshot file is created.
-
-### Added
-
-- `bun run release:check-tag <tag>`, which reads `public/js/mustache.js` from the named git tag and
-  fails when the MIT copyright notice ("Copyright (c) 2009 Chris Wanstrath") is absent or the file
-  cannot be read.
-- A "Historical artifacts" section in README.md directing recipients of tags before v0.3.0 to use
-  v0.3.0 or later.
 
 ### Compliance
 
