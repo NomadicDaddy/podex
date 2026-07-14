@@ -7,10 +7,22 @@
 
 	try {
 		$search = $WebEvent.Query['search']
-		$page = [int]($WebEvent.Query['page'] ?? 1)
-		$pageSize = [int]($WebEvent.Query['pageSize'] ?? 10)
 
-		# Write-FormattedLog -tag 'debug' -log "query: $($WebEvent.Query | ConvertTo-Json -Compress)"
+		# Parse paging inputs safely: reject non-numeric values, clamp out-of-range
+		# values, and fall back to the documented defaults of page 1 / pageSize 10.
+		$page = 1
+		if ([int]::TryParse($WebEvent.Query['page'], [ref]$page) -and $page -ge 1) {
+			# $page is already a valid positive integer
+		} else {
+			$page = 1
+		}
+
+		$pageSize = 10
+		if ([int]::TryParse($WebEvent.Query['pageSize'], [ref]$pageSize) -and $pageSize -ge 1) {
+			$pageSize = [Math]::Min($pageSize, 100)
+		} else {
+			$pageSize = 10
+		}
 
 		$offset = ($page - 1) * $pageSize
 

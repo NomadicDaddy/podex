@@ -157,6 +157,67 @@ Describe 'Canonical CRUD item model' {
 		$response.Value.pages.Count | Should -Be ([Math]::Ceiling($matching.count / 5))
 	}
 
+	It 'normalizes missing paging inputs to page 1 / pageSize 10' {
+		$seeded = Invoke-SqliteQuery -DataSource $script:DatabasePath -Query 'SELECT COUNT(*) AS [count] FROM [items];' -As PSObject
+		$seeded.count | Should -BeGreaterThan 10
+
+		$response = Invoke-CrudHandler -Method GET -Query @{}
+
+		$response.StatusCode | Should -Be 200
+		$response.Value.currentPage | Should -Be 1
+		$response.Value.rows.Count | Should -Be 10
+		$response.Value.totalItems | Should -Be $seeded.count
+	}
+
+	It 'normalizes non-numeric paging inputs to page 1 / pageSize 10' {
+		$seeded = Invoke-SqliteQuery -DataSource $script:DatabasePath -Query 'SELECT COUNT(*) AS [count] FROM [items];' -As PSObject
+		$seeded.count | Should -BeGreaterThan 10
+
+		$response = Invoke-CrudHandler -Method GET -Query @{ page = 'abc'; pageSize = 'xyz' }
+
+		$response.StatusCode | Should -Be 200
+		$response.Value.currentPage | Should -Be 1
+		$response.Value.rows.Count | Should -Be 10
+		$response.Value.totalItems | Should -Be $seeded.count
+	}
+
+	It 'normalizes zero paging inputs to page 1 / pageSize 10' {
+		$seeded = Invoke-SqliteQuery -DataSource $script:DatabasePath -Query 'SELECT COUNT(*) AS [count] FROM [items];' -As PSObject
+		$seeded.count | Should -BeGreaterThan 10
+
+		$response = Invoke-CrudHandler -Method GET -Query @{ page = '0'; pageSize = '0' }
+
+		$response.StatusCode | Should -Be 200
+		$response.Value.currentPage | Should -Be 1
+		$response.Value.rows.Count | Should -Be 10
+		$response.Value.totalItems | Should -Be $seeded.count
+	}
+
+	It 'normalizes negative paging inputs to page 1 / pageSize 10' {
+		$seeded = Invoke-SqliteQuery -DataSource $script:DatabasePath -Query 'SELECT COUNT(*) AS [count] FROM [items];' -As PSObject
+		$seeded.count | Should -BeGreaterThan 10
+
+		$response = Invoke-CrudHandler -Method GET -Query @{ page = '-1'; pageSize = '-5' }
+
+		$response.StatusCode | Should -Be 200
+		$response.Value.currentPage | Should -Be 1
+		$response.Value.rows.Count | Should -Be 10
+		$response.Value.totalItems | Should -Be $seeded.count
+	}
+
+	It 'caps pageSize greater than 100 at 100 and returns HTTP 200' {
+		$seeded = Invoke-SqliteQuery -DataSource $script:DatabasePath -Query 'SELECT COUNT(*) AS [count] FROM [items];' -As PSObject
+		$seeded.count | Should -BeGreaterThan 10
+
+		$response = Invoke-CrudHandler -Method GET -Query @{ page = '1'; pageSize = '500' }
+
+		$response.StatusCode | Should -Be 200
+		$response.Value.currentPage | Should -Be 1
+		# pageSize is capped at 100; the seed has 35 rows so all fit on one page
+		$response.Value.rows.Count | Should -Be $seeded.count
+		$response.Value.totalItems | Should -Be $seeded.count
+	}
+
 	It 'does not write a response snapshot into the source tree when debug mode is enabled' {
 		$handlerDir = Join-Path $PSScriptRoot '../api/crud'
 		$snapshotPath = Join-Path $handlerDir 'get.json'

@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `api/crud/get.ps1` now parses `page` and `pageSize` with `[int]::TryParse` instead of hard-casting
+  request values, which previously threw a cast exception for non-numeric inputs. Missing,
+  non-numeric, zero, or negative values fall back to the documented defaults (`page=1`,
+  `pageSize=10`), and `pageSize` values greater than 100 are clamped to 100. Added five Pester tests
+  covering missing, non-numeric, zero, negative, and greater-than-100 inputs.
+
 - Removed the debug hot-path response snapshot write and full-body logging from `api/crud/get.ps1`.
   When `Podex.Debug` was enabled, the handler wrote the full response as `get.json` into the source
   tree on every list request and logged the entire serialized body via `Write-FormattedLog`. Both
