@@ -1,13 +1,11 @@
 # Podex smoke:qc - aggregate quality gate.
 #
-# Mirrors spernakit's smoke:qc semantics: runs every order-independent gate and
-# reports ALL failures at the end, so one red step can't mask the others
-# (spernakit learned this the hard way when unacknowledged template drift hid
-# max-line violations behind a persistently-red earlier gate). Exits 1 if any
-# gate fails; 0 only if all pass.
+# Runs every order-independent gate and reports all failures at the end so one
+# failed step cannot mask another. Exits 1 if any gate fails and 0 only if all
+# pass.
 #
-# Gates use podex's existing scripts/binaries. Caching is intentionally omitted
-# - podex's gates are fast (~seconds), unlike spernakit's heavier pipeline.
+# Gates use Podex's existing scripts and binaries. Caching is omitted because
+# the gates complete in seconds.
 
 $ErrorActionPreference = 'Continue'
 Write-Output "Don't Panic."

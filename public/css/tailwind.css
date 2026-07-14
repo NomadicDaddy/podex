@@ -19,12 +19,9 @@
 }
 
 /*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
+  The templates depend on gray-200 as their default border color. Keep this
+  base layer unless every dependent element receives an explicit border-color
+  utility.
 */
 @layer base {
 	*,

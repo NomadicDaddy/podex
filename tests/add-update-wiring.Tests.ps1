@@ -24,7 +24,7 @@ Describe 'Add-item route and component wiring' {
 		$podex = Get-Content -LiteralPath (Join-Path $script:RepoRoot 'podex.ps1') -Raw
 		$podex | Should -Match "'/htmx/item-new'"
 		$podex | Should -Match "Components = @\('crudmgr-new'\)"
-		# Ensure the old mismatched names are gone
+		# Ensure mismatched route and component names are absent
 		$podex | Should -Not -Match "'/htmx/crudmgr-new'"
 		$podex | Should -Not -Match "Components = @\('crud-new'\)"
 	}
@@ -42,9 +42,9 @@ Describe 'Add-item route and component wiring' {
 		$component | Should -Match 'hx-post="/api/crud"'
 	}
 
-	It 'does not reference any legacy crud-new component file' {
-		$legacyPath = Join-Path $script:RepoRoot 'views/components/crud-new.pode'
-		Test-Path -LiteralPath $legacyPath | Should -Be $false
+	It 'does not reference the mismatched crud-new component file' {
+		$mismatchedPath = Join-Path $script:RepoRoot 'views/components/crud-new.pode'
+		Test-Path -LiteralPath $mismatchedPath | Should -Be $false
 	}
 }
 

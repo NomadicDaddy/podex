@@ -2,9 +2,8 @@
 #
 # Prefers Pode's own Close-PodeServer via the loopback /stop route (clean socket
 # release) and only escalates to force-killing the port listener if graceful
-# shutdown is unavailable or doesn't release in time. This avoids the orphaned
-# Windows socket binding that a bare taskkill /F leaves behind - AIDD's stop-web
-# strategy.
+# shutdown is unavailable or doesn't release in time. This prevents an orphaned
+# Windows socket from keeping the port bound.
 $port = 8433
 
 # 1. Graceful: ask Pode to close its own listener (registered when Podex.Debug is on).

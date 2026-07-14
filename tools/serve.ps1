@@ -2,10 +2,9 @@
 #   bun run dev    -> pwsh ./tools/serve.ps1             (foreground, blocking)
 #   bun run start  -> pwsh ./tools/serve.ps1 -Background (detached, non-blocking)
 #
-# Detached start uses a hidden Start-Process bridge that passes no inheritable
-# handles, so the server does not inherit a launcher socket and pin the port
-# after the launcher exits - the Windows trap (orphaned socket binding) that
-# `cmd /c start /b` falls into. Mirrors AIDD's start-web pattern.
+# Detached start uses a hidden Start-Process bridge without inheritable handles.
+# This lets the launcher exit without leaving an inherited socket bound to the
+# server port.
 param([switch]$Background)
 
 $root = Split-Path $PSScriptRoot -Parent
