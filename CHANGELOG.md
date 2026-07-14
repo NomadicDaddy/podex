@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Removed the debug hot-path response snapshot write and full-body logging from `api/crud/get.ps1`.
+  When `Podex.Debug` was enabled, the handler wrote the full response as `get.json` into the source
+  tree on every list request and logged the entire serialized body via `Write-FormattedLog`. Both
+  are removed; only bounded metadata (`"Items found: <count>"`) is logged. Added a Pester test that
+  runs `GET /api/crud` with debug enabled and asserts no snapshot file is created.
+
+### Added
+
+- `bun run release:check-tag <tag>`, which reads `public/js/mustache.js` from the named git tag and
+  fails when the MIT copyright notice ("Copyright (c) 2009 Chris Wanstrath") is absent or the file
+  cannot be read.
+- A "Historical artifacts" section in README.md directing recipients of tags before v0.3.0 to use
+  v0.3.0 or later.
+
+### Compliance
+
+- The public v0.2.0 tag distributed `public/js/mustache.js` without the MIT copyright and
+  permission notice and contained neither THIRD_PARTY_NOTICES.md nor THIRD_PARTY_LICENSES.md. Its
+  LICENSE file also carried a template-leftover copyright holder ("adminware") instead of
+  "Phillip Beazley". All three defects were corrected in v0.3.0, but the v0.2.0 tag remains
+  downloadable as a historical artifact and should not be redistributed.
+
 ## [0.3.0] - 2026-07-13
 
 ### Added

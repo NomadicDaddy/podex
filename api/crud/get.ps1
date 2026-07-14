@@ -66,11 +66,6 @@
 			currentPage = $page
 		}
 
-		Write-FormattedLog -tag 'debug' -log ($response | ConvertTo-Json -Depth 5 -Compress)
-		if ((Get-PodeConfig).Podex.Debug) {
-			New-Item -Name "$($WebEvent.Method).json" -Path $PSScriptRoot -ItemType File -Value ($response | ConvertTo-Json -Depth 5) -Force
-		}
-
 		Write-FormattedLog -tag 'debug' -log "Items found: $($totalItems)"
 		Write-PodeJsonResponse -StatusCode 200 -Value $response
 

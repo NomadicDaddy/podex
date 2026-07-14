@@ -3,11 +3,13 @@ BeforeAll {
 
 	$script:DatabasePath = Join-Path $TestDrive 'podex-test.db'
 	$script:Response = $null
+	$script:DebugEnabled = $false
 
 	function Get-PodeConfig {
 		return @{
 			Podex = @{
 				DBFile = $script:DatabasePath
+				Debug = $script:DebugEnabled
 			}
 		}
 	}
@@ -153,5 +155,27 @@ Describe 'Canonical CRUD item model' {
 		$response.Value.hasNextPage | Should -BeTrue
 		$response.Value.nextPage | Should -Be 2
 		$response.Value.pages.Count | Should -Be ([Math]::Ceiling($matching.count / 5))
+	}
+
+	It 'does not write a response snapshot into the source tree when debug mode is enabled' {
+		$handlerDir = Join-Path $PSScriptRoot '../api/crud'
+		$snapshotPath = Join-Path $handlerDir 'get.json'
+
+		$script:DebugEnabled = $true
+		try {
+			$response = Invoke-CrudHandler -Method GET -Query @{ page = '1'; pageSize = '10' }
+
+			$response.StatusCode | Should -Be 200
+			$response.Value.rows.Count | Should -BeGreaterThan 0
+
+			# No snapshot file is created beneath api/crud
+			$snapshotPath | Should -Not -Exist
+
+			# No *.json file is created beneath the test working directory either
+			$newJson = @(Get-ChildItem -Path $TestDrive -Filter '*.json' -Recurse -ErrorAction SilentlyContinue)
+			$newJson.Count | Should -Be 0
+		} finally {
+			$script:DebugEnabled = $false
+		}
 	}
 }
