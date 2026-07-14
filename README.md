@@ -12,7 +12,7 @@ It includes:
 - Tailwind CSS, light and dark themes, and reusable Pode layouts and partials;
 - OpenAPI output at `/docs/openapi` and Swagger UI at `/docs/swagger`;
 - local-only database and server controls when `Podex.Debug` is enabled;
-- Pester, PSScriptAnalyzer, ESLint, Prettier, knip, and a single `smoke:qc` command.
+- Pester, PSScriptAnalyzer, ESLint, Prettier, and a single `smoke:qc` command.
 
 ## Requirements
 
@@ -58,7 +58,7 @@ bun run stop
 ## Checks and releases
 
 `bun run smoke:qc` runs the PowerShell analyzer, ESLint, Pester, license checks, release
-packaging, formatting, and knip. It reports all failed gates before exiting.
+packaging, and formatting. It reports all failed gates before exiting.
 
 `bun run release` rebuilds the browser assets and stages the files listed in
 `release-manifest.json` under `dist/podex-<version>/`. Pode and PSSQLite stay external;

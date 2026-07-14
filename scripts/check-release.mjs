@@ -31,7 +31,15 @@ async function main() {
 		throw new Error(`Release is missing required entries:\n- ${missing.join('\n- ')}`);
 	}
 
-	for (const forbidden of ['node_modules', '.git', 'data/podex.db']) {
+	const forbiddenEntries = [
+		'node_modules',
+		'.git',
+		'data/podex.db',
+		'public/js/debug.js',
+		'public/js/htmx.min.js',
+		'public/js/mustache.min.js',
+	];
+	for (const forbidden of forbiddenEntries) {
 		if (await exists(join(stage, forbidden))) {
 			throw new Error(`Release contains forbidden entry: ${forbidden}`);
 		}
@@ -39,14 +47,22 @@ async function main() {
 
 	const notices = await readFile(join(stage, 'THIRD_PARTY_NOTICES.md'), 'utf8');
 	const summary = await readFile(join(stage, 'THIRD_PARTY_LICENSES.md'), 'utf8');
-	const requiredNoticeText = [
-		'Copyright (c) 2009 Chris Wanstrath',
-		'@tailwindcss/typography',
-		'htmx.org@',
-		'mustache@',
-	];
+	const requiredNoticeText = ['Copyright (c) 2009 Chris Wanstrath', 'htmx.org@', 'mustache@'];
 	for (const text of requiredNoticeText) {
 		if (!notices.includes(text)) throw new Error(`Third-party notices omit: ${text}`);
+	}
+	if (!summary.includes('excludes `node_modules`')) {
+		throw new Error('Third-party summary omits the node_modules distribution boundary.');
+	}
+	if (
+		!summary.includes(
+			'Platform-specific optional build packages are intentionally not serialized'
+		)
+	) {
+		throw new Error('Third-party summary omits the platform-neutral generation policy.');
+	}
+	if (!summary.includes('## Copyleft and weak-copyleft build components')) {
+		throw new Error('Third-party summary omits the copyleft build-component disclosure.');
 	}
 	if (!summary.includes('Lightning CSS')) {
 		throw new Error('Third-party summary omits the Lightning CSS distribution boundary.');
@@ -58,6 +74,9 @@ async function main() {
 	}
 	if (!stylesheet.includes('Copyright (c) Tailwind Labs, Inc.')) {
 		throw new Error('Browser-delivered stylesheet omits the Tailwind copyright notice.');
+	}
+	if (!stylesheet.includes('.podex-content')) {
+		throw new Error('Browser-delivered stylesheet omits the About page content styles.');
 	}
 
 	const stagedNoticeFiles = ['LICENSE', 'THIRD_PARTY_LICENSES.md', 'THIRD_PARTY_NOTICES.md'];

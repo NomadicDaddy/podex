@@ -9,7 +9,6 @@
 		<link rel="stylesheet" type="text/css" href="/public/css/output.css" />
 		<link rel="icon" type="image/x-icon" href="/public/images/podex.ico" />
 		<script src="/public/js/htmx.js"></script>
-		<script src="/public/js/debug.js"></script>
 		<script src="/public/js/client-side-templates.js"></script>
 		<script src="/public/js/json-enc.js"></script>
 		<script src="/public/js/mustache.js"></script>

@@ -57,7 +57,7 @@ bun run release
 Do not start, stop, or recycle a user-owned server unless the user asks.
 
 `smoke:qc` is the required quality gate. It runs PSScriptAnalyzer, ESLint, Pester, license
-checks, release packaging and verification, Prettier, and knip.
+checks, release packaging and verification, and Prettier.
 
 ## Release and licensing
 
@@ -65,5 +65,6 @@ checks, release packaging and verification, Prettier, and knip.
 Git metadata, or a local database.
 
 Run `bun run licenses:generate` after dependency changes and commit both generated license
-documents. `bun run check:licenses` verifies them against the installed dependency graph.
+documents. `bun run check:licenses` verifies the full installed dependency policy while keeping
+the committed release documents independent of platform-specific optional build packages.
 Browser-delivered Mustache and Tailwind assets carry their notices directly.

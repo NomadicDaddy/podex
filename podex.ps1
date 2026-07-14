@@ -63,7 +63,6 @@ Start-PodeServer -Name 'Podex' -Threads 5 -ScriptBlock {
 	Add-PodeRoute -Path '/crudmgr'	-Method Get, Post -ScriptBlock { Write-PodeViewResponse -Path 'layouts/main' -Data @{ PageName = 'CRUDMgr'; Title = 'Podex - CRUD Management Demo'; Components = @('crudmgr'); } }
 
 	# htmx routes (html only)
-	Add-PodeRoute -Path '/htmx/hello' -Method Get -FilePath './htmx/hello.ps1'
 	Add-PodeRoute -Path '/htmx/item-new' -Method Get -ScriptBlock { Write-PodeViewResponse -Path 'layouts/bare' -Data @{ Components = @('crudmgr-new'); } }
 
 	# file-based api routes (json or html)

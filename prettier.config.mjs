@@ -14,18 +14,12 @@ const config = {
 	bracketSameLine: true,
 	tailwindStylesheet: './public/css/tailwind.css',
 	tailwindPreserveWhitespace: true,
-	plugins: ['prettier-plugin-sql', 'prettier-plugin-tailwindcss'],
+	plugins: ['prettier-plugin-tailwindcss'],
 	overrides: [
 		{
 			files: ['scripts/**/*.mjs'],
 			options: {
 				printWidth: 100,
-			},
-		},
-		{
-			files: ['*.sql'],
-			options: {
-				language: 'sqlite',
 			},
 		},
 	],

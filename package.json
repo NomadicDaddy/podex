@@ -26,7 +26,7 @@
 		"licenses:generate": "bun scripts/generate-third-party-licenses.mjs",
 		"check:licenses": "bun scripts/generate-third-party-licenses.mjs --check",
 		"analyze": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -Command \"Import-Module PSScriptAnalyzer ; Invoke-ScriptAnalyzer -Path ./\"",
-		"test": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -Command \"Import-Module Pester ; Invoke-Pester -Path ./tests/*.ps1\"",
+		"test": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass \"./tools/test.ps1\"",
 		"build": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass \"./.build.ps1\"",
 		"release:package": "bun run assets:build && bun run check:licenses && bun scripts/package-release.mjs",
 		"release:check": "bun scripts/check-release.mjs",
@@ -37,20 +37,15 @@
 		"stop": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass \"./tools/stop.ps1\"",
 		"smoke:qc": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass \"./tools/smoke-qc.ps1\""
 	},
-	"dependencies": {
-		"@tailwindcss/cli": "^4.3.2",
-		"@tailwindcss/typography": "^0.5.20",
-		"htmx.org": "^4.0.0-beta5",
-		"mustache": "^4.2.0",
-		"tailwindcss": "^4.3.2"
-	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
+		"@tailwindcss/cli": "^4.3.2",
 		"eslint": "^10.7.0",
 		"globals": "^17.7.0",
+		"htmx.org": "^4.0.0-beta5",
+		"mustache": "^4.2.0",
 		"prettier": "^3.9.5",
-		"prettier-plugin-sql": "^0.20.0",
 		"prettier-plugin-tailwindcss": "^0.8.0",
-		"sharp": "^0.35.3"
+		"tailwindcss": "^4.3.2"
 	}
 }

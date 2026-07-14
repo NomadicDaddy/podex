@@ -1,7 +1,5 @@
 @import 'tailwindcss';
 
-@plugin '@tailwindcss/typography';
-
 @custom-variant dark (&:is(.dark *));
 
 @theme {
@@ -37,6 +35,69 @@
 	   a horizontal layout shift. */
 	html {
 		scrollbar-gutter: stable;
+	}
+}
+
+@layer components {
+	.podex-content {
+		@apply max-w-none space-y-4 p-6 text-gray-700;
+	}
+
+	.dark .podex-content {
+		@apply text-gray-300;
+	}
+
+	.podex-content h3 {
+		@apply pt-4 text-xl font-semibold text-gray-900;
+	}
+
+	.podex-content h3:first-child {
+		@apply pt-0;
+	}
+
+	.dark .podex-content h3,
+	.dark .podex-content strong {
+		@apply text-white;
+	}
+
+	.podex-content ul {
+		@apply list-disc space-y-1 pl-6;
+	}
+
+	.podex-content ol {
+		@apply list-decimal space-y-2 pl-6;
+	}
+
+	.podex-content a {
+		@apply font-medium text-blue-600 underline-offset-2;
+	}
+
+	.podex-content a:hover {
+		@apply underline;
+	}
+
+	.dark .podex-content a {
+		@apply text-blue-400;
+	}
+
+	.podex-content strong {
+		@apply font-semibold text-gray-900;
+	}
+
+	.podex-content code {
+		@apply rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm;
+	}
+
+	.dark .podex-content code {
+		@apply bg-gray-900;
+	}
+
+	.podex-content pre {
+		@apply overflow-x-auto rounded-lg bg-gray-900 p-4 text-gray-100;
+	}
+
+	.podex-content pre code {
+		@apply bg-transparent p-0 text-inherit;
 	}
 }
 

@@ -1,11 +1,7 @@
 export const browserAssets = [
-	{ name: 'htmx.org', role: 'Copied into `public/js/htmx*.js`' },
-	{ name: 'mustache', role: 'Copied into `public/js/mustache*.js`' },
+	{ name: 'htmx.org', role: 'Copied into `public/js/htmx.js`' },
+	{ name: 'mustache', role: 'Copied into `public/js/mustache.js`' },
 	{ name: 'tailwindcss', role: 'Compiled into `public/css/output.css`' },
-	{
-		name: '@tailwindcss/typography',
-		role: 'Compiled into `public/css/output.css`',
-	},
 ];
 
 /**
@@ -77,12 +73,6 @@ export const vendoredAssets = [
 		license: '0BSD',
 		name: 'htmx client-side-templates extension',
 		paths: '`src/vendor/client-side-templates.js`',
-		source: 'https://github.com/bigskysoftware/htmx/tree/v1.9.12/src/ext',
-	},
-	{
-		license: '0BSD',
-		name: 'htmx debug extension',
-		paths: '`src/vendor/debug.js`',
 		source: 'https://github.com/bigskysoftware/htmx/tree/v1.9.12/src/ext',
 	},
 	{

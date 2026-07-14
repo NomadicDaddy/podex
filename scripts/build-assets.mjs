@@ -5,16 +5,11 @@ const root = process.cwd();
 
 const assets = [
 	['src/vendor/client-side-templates.js', 'public/js/client-side-templates.js'],
-	['src/vendor/debug.js', 'public/js/debug.js'],
 	['src/vendor/json-enc.js', 'public/js/json-enc.js'],
 	['node_modules/htmx.org/dist/htmx.js', 'public/js/htmx.js'],
-	['node_modules/htmx.org/dist/htmx.min.js', 'public/js/htmx.min.js'],
 ];
 
-const licensedAssets = [
-	['node_modules/mustache/mustache.js', 'public/js/mustache.js'],
-	['node_modules/mustache/mustache.min.js', 'public/js/mustache.min.js'],
-];
+const licensedAssets = [['node_modules/mustache/mustache.js', 'public/js/mustache.js']];
 
 function commentBlock(title, licenseText) {
 	const lines = licenseText
@@ -39,10 +34,7 @@ async function writeLicensedAssets() {
 
 async function addStylesheetNotices() {
 	const outputPath = join(root, 'public/css/output.css');
-	const packages = [
-		['Tailwind CSS', 'node_modules/tailwindcss/LICENSE'],
-		['Tailwind CSS Typography', 'node_modules/@tailwindcss/typography/LICENSE'],
-	];
+	const packages = [['Tailwind CSS', 'node_modules/tailwindcss/LICENSE']];
 	const banners = [];
 
 	for (const [name, licensePath] of packages) {

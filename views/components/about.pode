@@ -5,7 +5,7 @@
 				<h2 class="text-2xl font-bold text-gray-900 dark:text-white">Podex - PowerShell/Pode + htmx Framework for Building Web Applications</h2>
 				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">An opinionated full-stack starter powered by PowerShell on the backend and htmx on the frontend.</p>
 			</div>
-			<div class="prose prose-gray dark:prose-invert max-w-none p-6">
+			<div class="podex-content">
 				<h3 id="table-of-contents">Table of Contents</h3>
 				<ul>
 					<li><a href="#introduction">Introduction</a></li>

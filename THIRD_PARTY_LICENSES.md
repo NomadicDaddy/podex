@@ -16,10 +16,9 @@ modules. The latter remain separate installations carrying their own license fil
 
 | Package | Version | License | How it ships |
 | --- | --- | --- | --- |
-| `htmx.org` | 4.0.0-beta5 | BSD-0-Clause | Copied into `public/js/htmx*.js` |
-| `mustache` | 4.2.0 | MIT | Copied into `public/js/mustache*.js` |
+| `htmx.org` | 4.0.0-beta5 | BSD-0-Clause | Copied into `public/js/htmx.js` |
+| `mustache` | 4.2.0 | MIT | Copied into `public/js/mustache.js` |
 | `tailwindcss` | 4.3.2 | MIT | Compiled into `public/css/output.css` |
-| `@tailwindcss/typography` | 0.5.20 | MIT | Compiled into `public/css/output.css` |
 
 The complete license text and copyright notices for these packages are reproduced in
 `THIRD_PARTY_NOTICES.md`, which must ship beside this file. The Mustache JavaScript and
@@ -31,7 +30,6 @@ notices remain attached when a browser receives either asset directly.
 | Component | License | Local source | Upstream |
 | --- | --- | --- | --- |
 | htmx client-side-templates extension | 0BSD | `src/vendor/client-side-templates.js` | [source](https://github.com/bigskysoftware/htmx/tree/v1.9.12/src/ext) |
-| htmx debug extension | 0BSD | `src/vendor/debug.js` | [source](https://github.com/bigskysoftware/htmx/tree/v1.9.12/src/ext) |
 | htmx json-enc extension | 0BSD | `src/vendor/json-enc.js` | [source](https://github.com/bigskysoftware/htmx/tree/v1.9.12/src/ext) |
 
 These files were adapted for htmx 4 from htmx's 0BSD-licensed extension implementations.
@@ -53,32 +51,22 @@ PSScriptAnalyzer are development-only. Podex does not copy these modules into it
 a future artifact bundles them, it must also carry each module's own license and, for Pode,
 its bundled third-party `licenses/` directory.
 
-## Direct npm dependencies
+## Direct npm build and development packages
 
-These packages are installed to build the browser assets; npm packages themselves are not
-included in the release.
-
-### Application and asset-build dependencies
-
-| Package | Installed version | License |
-| --- | --- | --- |
-| `@tailwindcss/cli` | 4.3.2 | MIT |
-| `@tailwindcss/typography` | 0.5.20 | MIT |
-| `htmx.org` | 4.0.0-beta5 | BSD-0-Clause |
-| `mustache` | 4.2.0 | MIT |
-| `tailwindcss` | 4.3.2 | MIT |
-
-### Development dependencies
+These packages are installed for asset building, formatting, linting, tests, or release tooling.
+The npm packages themselves are not included in the release.
 
 | Package | Installed version | License |
 | --- | --- | --- |
 | `@eslint/js` | 10.0.1 | MIT |
+| `@tailwindcss/cli` | 4.3.2 | MIT |
 | `eslint` | 10.7.0 | MIT |
 | `globals` | 17.7.0 | MIT |
+| `htmx.org` | 4.0.0-beta5 | BSD-0-Clause |
+| `mustache` | 4.2.0 | MIT |
 | `prettier` | 3.9.5 | MIT |
-| `prettier-plugin-sql` | 0.20.0 | MIT |
 | `prettier-plugin-tailwindcss` | 0.8.0 | MIT |
-| `sharp` | 0.35.3 | Apache-2.0 |
+| `tailwindcss` | 4.3.2 | MIT |
 
 ## Copyleft and weak-copyleft build components
 
@@ -86,20 +74,28 @@ The installed npm closure contains the following copyleft or weak-copyleft packa
 
 | Package | Version | License |
 | --- | --- | --- |
-| `@img/sharp-win32-x64` | 0.35.3 | Apache-2.0 AND LGPL-3.0-or-later |
 | `lightningcss` | 1.32.0 | MPL-2.0 |
-| `lightningcss-win32-x64-msvc` | 1.32.0 | MPL-2.0 |
 
-These packages are build tools or their native dependencies and are excluded from the Podex
-release. In particular, Tailwind uses Lightning CSS under MPL-2.0 to transform CSS. The
-generated CSS does not contain Lightning CSS code, so MPL-2.0 does not apply to Podex or the
-generated stylesheet. Sharp and its libvips binaries are development-only. A future artifact
-that bundles `node_modules`, Lightning CSS, Sharp, or libvips must be assessed separately and
-must carry the licenses and source notices required by those packages.
+These packages are build tools or their dependencies and are excluded from the Podex release. In
+particular, Tailwind uses Lightning CSS under MPL-2.0 to transform CSS. The generated CSS does
+not contain Lightning CSS code, so MPL-2.0 does not apply to Podex or the generated stylesheet. A
+future artifact that bundles `node_modules` or Lightning CSS must be assessed separately and must
+carry the licenses and source notices required by those packages.
+
+Platform-specific optional build packages are intentionally not serialized into this document
+because the installed set varies by host. They are still scanned by the policy check below and,
+like every npm package, are excluded from the release.
+
+## Dependency policy check
+
+License generation scans the complete installed npm dependency closure and fails when a package
+lacks license metadata or uses restrictive, source-available, non-commercial, proprietary, or
+ambiguous terms.
 
 ## Regeneration and verification
 
 Run `bun install --frozen-lockfile`, then `bun run licenses:generate` after changing a
 dependency or redistributed asset. `bun run check:licenses` fails when either generated
-document differs from the installed, locked dependency graph. `bun run release:check` then
-verifies that both notice documents travel with the staged release.
+document differs from the installed direct packages or redistributed asset list. The
+`bun run release:check` command then verifies that both notice documents travel with the staged
+release.

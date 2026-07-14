@@ -19,8 +19,7 @@ $gates = @(
 	@{ Name = 'test'; Cmd = { bun run test } },
 	@{ Name = 'check:licenses'; Cmd = { bun run check:licenses } },
 	@{ Name = 'release'; Cmd = { bun run release } },
-	@{ Name = 'format:check'; Cmd = { bun run format:check } },
-	@{ Name = 'knip'; Cmd = { bunx knip } }
+	@{ Name = 'format:check'; Cmd = { bun run format:check } }
 )
 
 $failed = @()

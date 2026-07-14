@@ -22,7 +22,7 @@ Describe 'License inventory restrictive classification' {
 		} finally {
 			Pop-Location
 		}
-		$output | Should -Match 'match the installed dependency graph'
+		$output | Should -Match 'match the installed packages and release assets'
 		$exitCode | Should -Be 0
 	}
 }
