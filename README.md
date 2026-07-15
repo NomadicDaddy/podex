@@ -60,9 +60,17 @@ bun run stop
 `bun run smoke:qc` runs the PowerShell analyzer, ESLint, Pester, license checks, release
 packaging, and formatting. It reports all failed gates before exiting.
 
-`bun run release` rebuilds the browser assets and stages the files listed in
-`release-manifest.json` under `dist/podex-<version>/`. Pode and PSSQLite stay external;
-`node_modules` is not included.
+`bun run release` rebuilds the browser assets, stages the files listed in
+`release-manifest.json` under `dist/podex-<version>/`, and produces a final
+`dist/podex-<version>.zip` archive from that staging tree. Pode and PSSQLite
+stay external; `node_modules` is not included.
+
+`release:check` verifies the archive's extracted contents, not the staging
+tree: it extracts `dist/podex-<version>.zip` into a scratch directory, asserts
+manifest presence, forbidden entries, notice text, copyright headers, and
+byte-equality of staged license documents, and removes the scratch directory
+afterward. A missing archive, a failed extraction, or an empty extracted tree
+fails the gate.
 
 ## Release archive requirements
 
