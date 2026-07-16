@@ -14,3 +14,6 @@ public/js/**
 THIRD_PARTY_LICENSES.md
 THIRD_PARTY_NOTICES.md
 **/*.pode
+
+# aidd metadata — local only, never formatted
+/.aidd/

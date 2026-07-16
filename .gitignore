@@ -6,7 +6,7 @@ logs/
 package-lock.json
 
 # build files
-.aidd/
+/.aidd/
 .vscode/
 data/
 dist/
