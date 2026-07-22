@@ -1,5 +1,5 @@
 '# required powershell modules'
-# Install-Module -Name PSSQLite -MinimumVersion 1.1.0 -MaximumVersion 1.99.99 -Verbose # MIT
+Install-Module -Name PSSQLite -MinimumVersion 1.1.0 -MaximumVersion 1.99.99 -Verbose # MIT
 Install-Module -Name Pode -MinimumVersion 2.11.1 -MaximumVersion 2.99.99 -Verbose # MIT
 
 '# development powershell modules'

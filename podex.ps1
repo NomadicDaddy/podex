@@ -1,6 +1,13 @@
-﻿Import-Module -Name 'PSSQLite' -MaximumVersion 1.99.99 -Force
-Import-Module -Name 'Pode' -MaximumVersion 2.99.99 -Force
+Import-Module -Name 'PSSQLite' -MinimumVersion 1.1.0 -MaximumVersion 1.99.99 -Force
+Import-Module -Name 'Pode' -MinimumVersion 2.11.1 -MaximumVersion 2.99.99 -Force
 Import-Module -Name "$PSScriptRoot/tools/PodexRoute.psm1" -Force
+
+# All runtime paths are resolved beneath the script root so the server starts
+# correctly regardless of the caller's working directory. This keeps
+# server.psd1, logs/, public/, api/, views/, and the SQLite database file
+# anchored to the repository root rather than to an arbitrary cwd.
+$root = $PSScriptRoot
+Set-Location -LiteralPath $root
 
 function Write-FormattedLog {
 	param([string]$tag, [string]$log, [switch]$save)
@@ -39,6 +46,22 @@ Start-PodeServer -Name 'Podex' -Threads 5 -ScriptBlock {
 	# get config
 	$cfg = (Get-PodeConfig)
 	Set-PodeViewEngine -Type Pode
+
+	# Resolve the configured SQLite database file to an absolute, normalized
+	# path beneath the script root so query handlers always read and write the
+	# intended file regardless of the working directory at request time. The
+	# parent directory is created if missing so initialization is idempotent.
+	$dbFile = $cfg.Podex.DBFile
+	if (-not [System.IO.Path]::IsPathRooted($dbFile)) {
+		$dbFile = (Join-Path $PSScriptRoot $dbFile)
+	}
+	$dataDir = (Split-Path -Parent $dbFile)
+	if (-not (Test-Path -LiteralPath $dataDir)) {
+		New-Item -ItemType Directory -Path $dataDir -Force | Out-Null
+	}
+	# Normalize the full path (strips ./ segments, resolves .. etc.) against the
+	# now-existing parent directory.
+	$cfg.Podex.DBFile = (Join-Path (Resolve-Path -LiteralPath $dataDir).Path (Split-Path -Leaf $dbFile))
 
 	# setup logging
 	New-PodeLoggingMethod -File -Path './logs' -Name 'requests' | Enable-PodeRequestLogging
@@ -90,19 +113,25 @@ Start-PodeServer -Name 'Podex' -Threads 5 -ScriptBlock {
 	# Debug-only routes (api/debug/*.ps1) register only when Podex.Debug is
 	# enabled and use the short public paths /stop, /clear, and /init. With
 	# debug disabled those destructive endpoints are absent entirely. When debug
-	# is enabled, a loopback guard still restricts them to localhost so a
-	# reachable debug-enabled host cannot be driven by a remote, unauthenticated
-	# caller.
+	# is enabled, a loopback guard and an X-Podex-Debug header guard restrict
+	# them to local tooling so a reachable debug-enabled host cannot be driven
+	# by a remote or unauthenticated caller.
 	$debugLoopbackGuard = {
 		$clientIp = $WebEvent.Request.Handler.RemoteEndPoint.Address
-		if (($clientIp -eq [System.Net.IPAddress]::Loopback) -or ($clientIp -eq [System.Net.IPAddress]::IPv6Loopback)) {
-			return $true
+		if ((-not ($clientIp -eq [System.Net.IPAddress]::Loopback)) -and
+			(-not ($clientIp -eq [System.Net.IPAddress]::IPv6Loopback))) {
+			Set-PodeResponseStatus -Code 403 -Description 'Debug endpoints are restricted to localhost.'
+			return $false
 		}
-		Set-PodeResponseStatus -Code 403 -Description 'Debug endpoints are restricted to localhost.'
-		return $false
+		$header = $WebEvent.Request.Headers['X-Podex-Debug']
+		if (-not $header -or $header -ne 'true') {
+			Set-PodeResponseStatus -Code 403 -Description 'Debug endpoints require X-Podex-Debug: true.'
+			return $false
+		}
+		return $true
 	}
-	foreach ($file in (Get-ChildItem -Path './api' -Filter *.ps1 -Recurse -File)) {
-		$routeInfo = Resolve-PodexApiRoute -FilePath $file.FullName -BaseDirectory $PWD.Path -DebugEnabled $cfg.Podex.Debug
+	foreach ($file in (Get-ChildItem -Path "$PSScriptRoot/api" -Filter *.ps1 -Recurse -File)) {
+		$routeInfo = Resolve-PodexApiRoute -FilePath $file.FullName -BaseDirectory $PSScriptRoot -DebugEnabled $cfg.Podex.Debug
 		if ($routeInfo.Skip) {
 			continue
 		}
@@ -129,7 +158,7 @@ Start-PodeServer -Name 'Podex' -Threads 5 -ScriptBlock {
 	# The application version is loaded once from package.json so there is no
 	# independent version literal that can drift. Pode renders the OpenAPI
 	# document at /docs/openapi with this version.
-	$podexVersion = ((Get-Content -Raw -LiteralPath './package.json' | ConvertFrom-Json).version)
+	$podexVersion = ((Get-Content -Raw -LiteralPath "$PSScriptRoot/package.json" | ConvertFrom-Json).version)
 	Enable-PodeOpenApi -RouteFilter '/api/*' -Path '/docs/openapi'
 	Add-PodeOAInfo -Title 'Podex - OpenAPI 3.0' -Version $podexVersion -Description 'Podex API'
 	Enable-PodeOAViewer -Type Swagger -Path '/docs/swagger' -DarkMode -Title 'Podex API' -OpenApiUrl '/docs/openapi'

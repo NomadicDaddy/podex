@@ -51,7 +51,7 @@ cd podex</code></pre>
 					</li>
 					<li>
 						Install PowerShell modules:
-						<pre><code>powershell -Command ". ./.build.ps1"</code></pre>
+						<pre><code>pwsh -File ./.build.ps1</code></pre>
 					</li>
 				</ol>
 				<h2 id="running-the-project">Running the Project</h2>

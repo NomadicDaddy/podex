@@ -2,7 +2,7 @@
 	$db = (Get-PodeConfig).Podex.DBFile
 
 	try {
-		$sqlx = Get-Content -Path './api/debug/clear.sql' -Raw
+		$sqlx = Get-Content -Path "$PSScriptRoot/../../api/debug/clear.sql" -Raw
 		Invoke-SqliteQuery -DataSource $db -Query $sqlx
 		Write-FormattedLog -tag 'debug' -log "Database cleared successfully"
 		Write-PodeJsonResponse -StatusCode 200 -Value @{ message = "Database cleared successfully" }

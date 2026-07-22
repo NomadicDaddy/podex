@@ -2,36 +2,71 @@
 #   bun run dev    -> pwsh ./tools/serve.ps1             (foreground, blocking)
 #   bun run start  -> pwsh ./tools/serve.ps1 -Background (detached, non-blocking)
 #
-# Detached start uses a hidden Start-Process bridge without inheritable handles.
-# This lets the launcher exit without leaving an inherited socket bound to the
-# server port.
+# Background start spawns podex.ps1 detached, records the spawned PID under
+# data/podex.pid, and polls the configured HTTP/HTTPS endpoint for readiness.
+# Uses only cross-platform PowerShell 7 APIs (no Windows-only TCP or window
+# cmdlets) so the same script works on Windows, Linux, and macOS.
 param([switch]$Background)
 
 $root = Split-Path $PSScriptRoot -Parent
 Set-Location -LiteralPath $root
-$port = 8433
+
+# Read the configured endpoint from server.psd1 so serve.ps1 never hardcodes a
+# port and stays in sync with PodeCfg.
+$configPath = Join-Path $root 'server.psd1'
+$config = Import-PowerShellDataFile -LiteralPath $configPath
+$port = $config.PodeCfg.HttpPort
+$address = $config.PodeCfg.HttpUrl
+$https = [bool]$config.PodeCfg.HttpsEnabled
+$scheme = if ($https) { 'https' } else { 'http' }
+$endpointUrl = "${scheme}://${address}:${port}"
+
 $scriptPath = Join-Path $root 'podex.ps1'
 
 if ($Background) {
-	Start-Process -FilePath 'pwsh' `
-		-ArgumentList '-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $scriptPath `
-		-WorkingDirectory $root -WindowStyle Hidden
+	$spawnArgs = @(
+		'-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass',
+		'-File', $scriptPath
+	)
 
+	# Start-Process with -PassThru works cross-platform. The Windows-only
+	# window-style parameter is omitted; on headless Linux/macOS it is ignored.
+	$process = Start-Process -FilePath 'pwsh' `
+		-ArgumentList $spawnArgs `
+		-WorkingDirectory $root `
+		-PassThru
+
+	# Record the spawned PID so stop.ps1 can target this exact process instead
+	# of guessing by port ownership.
+	$dataDir = Join-Path $root 'data'
+	if (-not (Test-Path -LiteralPath $dataDir)) {
+		New-Item -ItemType Directory -Path $dataDir -Force | Out-Null
+	}
+	$pidFile = Join-Path $dataDir 'podex.pid'
+	Set-Content -LiteralPath $pidFile -Value $process.Id -NoNewline -Force
+
+	# Poll the configured HTTP/HTTPS endpoint for readiness (up to ~30s). This
+	# works on every platform because it checks the actual served response, not
+	# a Windows-specific TCP table.
 	$ready = $false
 	for ($i = 0; $i -lt 60; $i++) {
-		if (Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue) {
+		if ($process.HasExited) { break }
+		try {
+			$null = Invoke-WebRequest -Uri $endpointUrl -UseBasicParsing -TimeoutSec 2 `
+				-SkipCertificateCheck:$https
 			$ready = $true
 			break
+		} catch {
+			Start-Sleep -Milliseconds 500
 		}
-		Start-Sleep -Milliseconds 500
 	}
 
 	if ($ready) {
-		Write-Output "Podex running in background at http://localhost:$port"
-		Write-Output "Logs: $root\logs\  |  Stop: bun run stop"
+		Write-Output "Podex running in background at $endpointUrl"
+		Write-Output "Logs: $root/logs/  |  Stop: bun run stop"
 		exit 0
 	}
-	Write-Error "Podex did not bind port $port within 30s; check $root\logs\."
+	Write-Error "Podex did not answer $endpointUrl within 30s; check $root/logs/."
 	exit 1
 }
 

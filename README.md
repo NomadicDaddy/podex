@@ -21,12 +21,9 @@ It includes:
 - PSSQLite 1.x (runtime)
 - Pode 2.x (runtime)
 
-The build installs Pode and the development PowerShell modules. PSSQLite remains a manual
-prerequisite:
-
-```powershell
-Install-Module -Name PSSQLite -MinimumVersion 1.1.0 -MaximumVersion 1.99.99 -Scope CurrentUser
-```
+The build (`bun run build` / `.build.ps1`) installs PSSQLite, Pode, and the development
+PowerShell modules (Pester, PSScriptAnalyzer) with pinned version ranges, then runs the
+quality gates.
 
 ## Setup
 
