@@ -18,7 +18,7 @@ modules. The latter remain separate installations carrying their own license fil
 | --- | --- | --- | --- |
 | `htmx.org` | 4.0.0-beta5 | BSD-0-Clause | Copied into `public/js/htmx.js` |
 | `mustache` | 4.2.0 | MIT | Copied into `public/js/mustache.js` |
-| `tailwindcss` | 4.3.2 | MIT | Compiled into `public/css/output.css` |
+| `tailwindcss` | 4.3.3 | MIT | Compiled into `public/css/output.css` |
 
 The complete license text and copyright notices for these packages are reproduced in
 `THIRD_PARTY_NOTICES.md`, which must ship beside this file. The Mustache JavaScript and
@@ -59,14 +59,14 @@ The npm packages themselves are not included in the release.
 | Package | Installed version | License |
 | --- | --- | --- |
 | `@eslint/js` | 10.0.1 | MIT |
-| `@tailwindcss/cli` | 4.3.2 | MIT |
+| `@tailwindcss/cli` | 4.3.3 | MIT |
 | `eslint` | 10.7.0 | MIT |
 | `globals` | 17.7.0 | MIT |
 | `htmx.org` | 4.0.0-beta5 | BSD-0-Clause |
 | `mustache` | 4.2.0 | MIT |
 | `prettier` | 3.9.5 | MIT |
-| `prettier-plugin-tailwindcss` | 0.8.0 | MIT |
-| `tailwindcss` | 4.3.2 | MIT |
+| `prettier-plugin-tailwindcss` | 0.8.1 | MIT |
+| `tailwindcss` | 4.3.3 | MIT |
 
 ## Copyleft and weak-copyleft build components
 

@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.4.0] - 2026-07-14
+## [0.4.0] - 2026-07-22
 
 ### Added
 
@@ -16,6 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cannot be read.
 - A "Historical artifacts" section in README.md directing recipients of tags before v0.3.0 to use
   v0.3.0 or later.
+- A pre-push hook under `.githooks/` that blocks a push carrying `.aidd/` metadata, enabled by
+  `git config core.hooksPath .githooks`. A clean working tree says nothing about the commits behind
+  it, so the guard queries the history in the push range rather than the tip. Contributors who clone
+  the repository must set `core.hooksPath` themselves; Git does not install hooks on clone.
+- `bun run check:license-core`, a fail-closed self-test of the license-classification core that runs
+  ahead of `check:licenses`, plus a positive reviewed-license allowlist in `license-catalog.mjs`
+  layered on top of the existing restrictive-license denylist.
 
 ### Changed
 
@@ -25,6 +32,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Host-neutral copyleft build components remain disclosed, and `release:check` now enforces that
   the copyleft section and the Lightning CSS distribution boundary survive regeneration.
 - The About page now uses explicit Tailwind utilities instead of the Typography plugin.
+- The installed-closure walk, SPDX review, and manifest reading now route through the shared
+  `scripts/lib/license-core` modules. These files are synced from an upstream source and carry a
+  header saying so: edits must originate upstream, and exports with no caller in this repository are
+  expected because other adopters consume them.
+- Bumped `tailwindcss` to 4.3.3 and `prettier-plugin-tailwindcss` to 0.8.1.
 
 ### Removed
 
@@ -66,6 +78,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   tree on every list request and logged the entire serialized body via `Write-FormattedLog`. Both
   are removed; only bounded metadata (`"Items found: <count>"`) is logged. Added a Pester test that
   runs `GET /api/crud` with debug enabled and asserts no snapshot file is created.
+
+- `bun run release` now produces a final `dist/podex-<version>.zip` archive from the staging tree,
+  and `release:check` verifies the archive's extracted contents rather than the staging directory it
+  was built from. Previously the process staged files but never produced or verified a shippable
+  artifact, so nothing checked what recipients would actually receive. The gate fails closed on a
+  missing archive, a failed extraction, or an empty extracted tree. Added
+  `tests/release-archive.Tests.ps1` with three Pester tests.
+
+- Restored fail-closed license coverage lost when the dependency closure became an installed
+  listing: nested version-conflicted copies are scanned again, and the generator now fails when a
+  declared dependency is missing from the installed tree. Extended the classification harness with
+  GPL, AGPL, SSPL, and WTFPL cases.
 
 ### Compliance
 
