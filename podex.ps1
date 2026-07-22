@@ -80,8 +80,8 @@ Start-PodeServer -Name 'Podex' -Threads 5 -ScriptBlock {
 	Add-PodeStaticRoute -Path '/public' -Source './public'
 
 	# front-end routes
-	Add-PodeRoute -Path '/' -Method Get, Post -ScriptBlock { Write-PodeViewResponse -Path 'layouts/main' -Data @{ PageName = 'Home'; Title = 'Podex - PowerShell/Pode + htmx Framework for Building Web Applications'; Components = @('about'); } }
-	Add-PodeRoute -Path '/crudmgr'	-Method Get, Post -ScriptBlock { Write-PodeViewResponse -Path 'layouts/main' -Data @{ PageName = 'CRUDMgr'; Title = 'Podex - CRUD Management Demo'; Components = @('crudmgr'); } }
+	Add-PodeRoute -Path '/' -Method Get, Post -ScriptBlock { Write-PodeViewResponse -Path 'layouts/main' -Data @{ PageName = 'Home'; Title = 'Home'; Components = @('about'); } }
+	Add-PodeRoute -Path '/crudmgr'	-Method Get, Post -ScriptBlock { Write-PodeViewResponse -Path 'layouts/main' -Data @{ PageName = 'CRUDMgr'; Title = 'CRUD Manager'; Components = @('crudmgr'); } }
 
 	# htmx routes (html only)
 	Add-PodeRoute -Path '/htmx/item-new' -Method Get -ScriptBlock { Write-PodeViewResponse -Path 'layouts/bare' -Data @{ Components = @('crudmgr-new'); } }
@@ -126,8 +126,12 @@ Start-PodeServer -Name 'Podex' -Threads 5 -ScriptBlock {
 	}
 
 	# api docs
+	# The application version is loaded once from package.json so there is no
+	# independent version literal that can drift. Pode renders the OpenAPI
+	# document at /docs/openapi with this version.
+	$podexVersion = ((Get-Content -Raw -LiteralPath './package.json' | ConvertFrom-Json).version)
 	Enable-PodeOpenApi -RouteFilter '/api/*' -Path '/docs/openapi'
-	Add-PodeOAInfo -Title 'Podex - OpenAPI 3.0' -Version 0.0.1 -Description 'Podex API'
+	Add-PodeOAInfo -Title 'Podex - OpenAPI 3.0' -Version $podexVersion -Description 'Podex API'
 	Enable-PodeOAViewer -Type Swagger -Path '/docs/swagger' -DarkMode -Title 'Podex API' -OpenApiUrl '/docs/openapi'
 
 }

@@ -2,12 +2,11 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="description" content="$($data.status.code) Error" />
+		<meta name="description" content="$($data.status.code ;) Error" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<meta name="generator" content="Podex 0.1.2 using PowerShell $($PSVersionTable.'PSEdition' ;) $([string]$PSVersionTable.'PSVersion' ;)" />
-		<title>$($data.status.code ;) Error</title>
+		<title>Podex - $($data.status.code ;) Error</title>
 		<link rel="stylesheet" type="text/css" href="/public/css/output.css" />
-		<link rel="icon" type="image/svg+xml" href="/public/images/favicon.svg" />
+		<link rel="icon" type="image/x-icon" href="/public/images/podex.ico" />
 		<script src="/public/js/htmx.js"></script>
 		<script src="/public/js/client-side-templates.js"></script>
 		<script src="/public/js/json-enc.js"></script>
@@ -18,19 +17,7 @@
 
 		<main class="container mx-auto max-w-(--breakpoint-xl) p-2 lg:px-3 lg:py-4">
 			<h1>$($data.status.code ;) Error</h1>
-			<p>Description: $($data.status.description ;)</p>
-
-			$(if ($data.exception) { "
-			<pre>
-				$($data.exception.message)
-				$($data.exception.stacktrace)
-			</pre>
-			" } ;)
-
-			<div class="bg-white text-left text-sm text-black">
-				<p>Render Time: $([DateTime]::Now.ToString('yyyy-MM-dd HH:mm:ss') ;)</p>
-				<p>Data: $($data | ConvertTo-Json ;)</p>
-			</div>
+			<p>An unexpected error occurred. Please try again later.</p>
 		</main>
 
 		$(Use-PodePartialView -Path 'partials/footer' ;)

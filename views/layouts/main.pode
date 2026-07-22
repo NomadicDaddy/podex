@@ -4,7 +4,6 @@
 		<meta charset="UTF-8" />
 		<meta name="description" content="Podex - PowerShell/Pode + htmx Framework for Building Web Applications" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<meta name="generator" content="Podex 0.1.2 using PowerShell $($PSVersionTable.'PSEdition' ;) $([string]$PSVersionTable.'PSVersion' ;)" />
 		<title>Podex - $($data.Title ;)</title>
 		<link rel="stylesheet" type="text/css" href="/public/css/output.css" />
 		<link rel="icon" type="image/x-icon" href="/public/images/podex.ico" />

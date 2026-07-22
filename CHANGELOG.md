@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Unified the error pages and site metadata into one consistent contract
+  (`podex-error-pages-and-site-metadata`). `podex.ps1` now passes unprefixed
+  page titles (`Home` and `CRUD Manager`) so `views/layouts/main.pode` renders
+  exactly `Podex - <title>` with no double-prefix (`Podex - Podex -`). The
+  OpenAPI version for `Add-PodeOAInfo -Version` is loaded once from
+  `package.json`, removing the stale `0.0.1` literal. The version-bearing
+  `<meta name="generator">` tag (which leaked `PSEdition`/`PSVersion` with an
+  obsolete `0.1.2` Podex literal) was removed from `main.pode`,
+  `errors/404.html.pode`, and `errors/default.html.pode`. Both error templates
+  now reference `/public/images/podex.ico` (dropping the missing
+  `favicon.svg`), follow the `Podex - <title>` convention, and no longer expose
+  raw `$data | ConvertTo-Json` dumps, render timestamps, exception messages, or
+  stack traces in client-visible markup. The error templates remain standalone
+  but enforce the same charset, viewport, favicon, safe generator policy, and
+  title convention through tests. 6 new static assertions were added to
+  `tests/error-page-disclosure.Tests.ps1` and 14 new live-server assertions were
+  added in the new `tests/site-metadata.Tests.ps1` (titles, favicon, no
+  double-prefix, package-derived OpenAPI version, no generator tag, no
+  PowerShell-version leak, and safe 404 markup including the 404 status code
+  and title). Source feature `feature-framework-server` (spec line 7) amended
+  to close the audit feedback loop.
+
 - Stabilized the CRUD API contract, validation, and item data presentation
   (`podex-crud-contract-validation-and-data-presentation`). GET `/api/crud` now
   always returns `rows` as a stable array (using `ArrayList` to survive
