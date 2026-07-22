@@ -33,13 +33,15 @@ Set-Location podex
 bun run build
 ```
 
-The CRUD example expects `data/podex.db`. To create it from the checked-in schema:
+The build installs the required PowerShell modules (PSSQLite 1.x, Pode 2.x) for
+the current user, installs Bun dependencies, runs every quality gate, and then
+initializes the example database at `data/podex.db` from `api/debug/init.sql` if
+it does not already exist. A clean checkout needs nothing else before
+`bun run dev`.
 
-```powershell
-New-Item -ItemType Directory -Path data -Force | Out-Null
-$sql = Get-Content -Raw api/debug/init.sql
-Invoke-SqliteQuery -DataSource data/podex.db -Query $sql
-```
+If a database already exists at the configured path, the build leaves the
+existing data intact. To reseed from the checked-in schema, delete
+`data/podex.db` (or run `DELETE /clear` then `POST /init` with debug mode on).
 
 ## Run Podex
 
