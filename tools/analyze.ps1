@@ -26,8 +26,7 @@ try {
 			Invoke-ScriptAnalyzer -Path $_.FullName -ErrorAction Stop
 		}
 	)
-}
-catch {
+} catch {
 	Write-Output "PSScriptAnalyzer failed: $($_.Exception.Message)"
 	exit 1
 }

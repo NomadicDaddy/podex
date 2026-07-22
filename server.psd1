@@ -9,14 +9,14 @@
 				Enable = $false
 			}
 		}
-        FileMonitor = @{
-            Enable = $false
+		FileMonitor = @{
+			Enable = $false
 			Include = @("*.pode", "*.ps1")
 			Exclude = @('podex.ps1')
-            ShowFiles = $true
-        }
+			ShowFiles = $true
+		}
 		Request = @{
-				Timeout = 600
+			Timeout = 600
 		}
 	}
 	Web = @{

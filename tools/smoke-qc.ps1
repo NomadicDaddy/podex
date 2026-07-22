@@ -15,6 +15,7 @@ Set-Location -LiteralPath $root
 
 $gates = @(
 	@{ Name = 'analyze'; Cmd = { bun run analyze } },
+	@{ Name = 'format:pwsh:check'; Cmd = { bun run format:pwsh:check } },
 	@{ Name = 'lint'; Cmd = { bun run lint } },
 	@{ Name = 'test'; Cmd = { bun run test } },
 	@{ Name = 'check:licenses'; Cmd = { bun run check:licenses } },

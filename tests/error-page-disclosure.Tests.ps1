@@ -26,12 +26,6 @@ Describe 'Error page exception disclosure configuration' {
 		$config = Import-PowerShellDataFile -Path $script:ConfigPath
 		$config.Podex.Debug | Should -Be $false
 	}
-
-	It 'does not expose exception details when Podex.Debug is false' {
-		$config = Import-PowerShellDataFile -Path $script:ConfigPath
-		$config.Podex.Debug | Should -Be $false
-		$config.Web.ErrorPages.ShowExceptions | Should -Be $false
-	}
 }
 
 Describe 'Error templates do not leak runtime internals' {

@@ -30,8 +30,12 @@ BeforeAll {
 	function Initialize-PodexMetadataServer {
 		param([int]$Port)
 
-		# Back up the checked-in config. AfterAll always restores it.
-		$script:OriginalConfig = Get-Content -Raw -LiteralPath $script:ConfigPath
+		# Back up the checked-in config once (the first Describe to initialize).
+		# Subsequent Describes reuse the same backup so AfterAll always restores
+		# the original, not a temp config left by an earlier Describe.
+		if ($null -eq $script:OriginalConfig) {
+			$script:OriginalConfig = Get-Content -Raw -LiteralPath $script:ConfigPath
+		}
 
 		# Seed an isolated database in the Pester temp drive so the API and
 		# CRUD routes resolve against known data without touching ./data/.

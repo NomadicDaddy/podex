@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- PowerShell format consistency gate and Pode template compile regression
+  (`podex-powershell-and-template-quality-gates`). Added
+  `PSScriptAnalyzerSettings.psd1` (tab indentation, four-column tab display
+  width, OTBS braces, consistent whitespace, `PSUseCorrectCasing`) and
+  `tools/format-check.ps1`, which runs `Invoke-Formatter` with those settings
+  over the same recursive `.ps1`/`.psm1`/`.psd1` source set and exclusions as
+  `tools/analyze.ps1` and exits 1 when any file's formatted text differs from
+  its checked-in content. Added the `format:pwsh:check` package script and a
+  distinct `format:pwsh:check` gate to `tools/smoke-qc.ps1` (`bun run analyze`
+  remains a separate fail-closed gate). Added `tests/pode-templates.Tests.ps1`
+  which reads every `views/**/*.pode` and `errors/**/*.pode` file, applies
+  Pode 2.13's `ConvertFrom-PodeFile` escaping shape locally, and verifies
+  `[scriptblock]::Create` succeeds — including a TestDrive malformed-template
+  fixture that proves the shape rejects broken templates. Added
+  `tests/powershell-format.Tests.ps1` which proves the format checker passes for
+  the project source tree, exits 1 for a misformatted TestDrive fixture, and
+  exits 0 for a pre-formatted fixture.
+
+### Fixed
+
+- Narrowed `tools/test.ps1` to discover `tests/*.Tests.ps1` containers (was
+  `tests/*.ps1`), so the glob is explicit and future-proof. Normalized
+  `server.psd1`, `tools/analyze.ps1`, and `tools/stop.ps1` to conform to the
+  project formatting settings (spaces to tabs, OTBS `} catch {`, pipeline
+  continuation indent). Removed the duplicate `Podex.Debug` /
+  `ShowExceptions` assertion-only case from
+  `tests/error-page-disclosure.Tests.ps1` while retaining one independent
+  assertion for each setting. Fixed the `server.psd1` config backup logic in
+  `tests/security-headers.Tests.ps1` and `tests/site-metadata.Tests.ps1` so
+  multi-Describe containers back up the checked-in config only once; previously
+  the second `Describe` overwrote the backup with a temp config, leaving
+  `server.psd1` polluted (wrong port and database path) after a test run. All
+  197 tests pass and `bun run smoke:qc` exits 0.
+
 ### Fixed
 
 - Unified the error pages and site metadata into one consistent contract

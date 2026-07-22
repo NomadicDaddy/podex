@@ -22,7 +22,7 @@ if ($graceful) {
 
 # 2. Verify release; escalate to force-killing the port listener if still bound.
 $procs = @(Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue |
-	Select-Object -ExpandProperty OwningProcess -Unique)
+		Select-Object -ExpandProperty OwningProcess -Unique)
 
 if ($procs.Count -gt 0) {
 	$procs | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }
