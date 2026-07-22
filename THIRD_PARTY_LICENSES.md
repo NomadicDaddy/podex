@@ -64,7 +64,7 @@ The npm packages themselves are not included in the release.
 | `globals` | 17.7.0 | MIT |
 | `htmx.org` | 4.0.0-beta5 | BSD-0-Clause |
 | `mustache` | 4.2.0 | MIT |
-| `prettier` | 3.9.5 | MIT |
+| `prettier` | 3.9.6 | MIT |
 | `prettier-plugin-tailwindcss` | 0.8.1 | MIT |
 | `tailwindcss` | 4.3.3 | MIT |
 
