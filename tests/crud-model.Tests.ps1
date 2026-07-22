@@ -1,4 +1,4 @@
-BeforeAll {
+﻿BeforeAll {
 	Import-Module -Name PSSQLite -MaximumVersion 1.99.99 -Force
 
 	$script:DatabasePath = Join-Path $TestDrive 'podex-test.db'
@@ -79,6 +79,14 @@ Describe 'Canonical CRUD item model' {
 		}
 
 		$postResponse.StatusCode | Should -Be 201
+		$postResponse.Value.message | Should -Be 'Item created successfully'
+		# POST must return the created record with the canonical fields and trimmed values
+		$postResponse.Value.item.id | Should -BeGreaterThan 0
+		$postResponse.Value.item.item | Should -Be 'Test item'
+		$postResponse.Value.item.description | Should -Be 'Test description'
+		$postResponse.Value.item.created_at | Should -Match '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$'
+		$postResponse.Value.item.updated_at | Should -Match '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$'
+
 		$created = Invoke-SqliteQuery -DataSource $script:DatabasePath -Query "SELECT * FROM [items] WHERE [item] = 'Test item';" -As PSObject
 		$created.item | Should -Be 'Test item'
 		$created.description | Should -Be 'Test description'
@@ -96,12 +104,16 @@ Describe 'Canonical CRUD item model' {
 		}
 
 		$putResponse.StatusCode | Should -Be 200
+		$putResponse.Value.message | Should -Be 'Item updated successfully'
+		$putResponse.Value.id | Should -Be $created.id
 		$updated = Invoke-SqliteQuery -DataSource $script:DatabasePath -Query 'SELECT * FROM [items] WHERE [id] = @id;' -SqlParameters @{ id = $created.id } -As PSObject
 		$updated.item | Should -Be 'Updated item'
 		$updated.description | Should -Be 'Updated description'
 
 		$deleteResponse = Invoke-CrudHandler -Method DELETE -Query @{ id = $created.id }
 		$deleteResponse.StatusCode | Should -Be 200
+		$deleteResponse.Value.message | Should -Be 'Item deleted successfully'
+		$deleteResponse.Value.id | Should -Be $created.id
 		$remaining = Invoke-SqliteQuery -DataSource $script:DatabasePath -Query 'SELECT COUNT(*) AS [count] FROM [items] WHERE [id] = @id;' -SqlParameters @{ id = $created.id } -As PSObject
 		$remaining.count | Should -Be 0
 	}
@@ -242,6 +254,296 @@ Describe 'Canonical CRUD item model' {
 			$newJson.Count | Should -Be 0
 		} finally {
 			$script:DebugEnabled = $false
+		}
+	}
+
+	It 'returns rows as an empty array when no items match the search' {
+		$response = Invoke-CrudHandler -Method GET -Query @{ search = 'ZZZZNOTFOUNDZZZZ' }
+
+		$response.StatusCode | Should -Be 200
+		$response.Value.rows.Count | Should -Be 0
+		$response.Value.totalItems | Should -Be 0
+		$response.Value.startIndex | Should -Be 0
+		$response.Value.endIndex | Should -Be 0
+		$response.Value.hasPreviousPage | Should -BeFalse
+		$response.Value.hasNextPage | Should -BeFalse
+		$response.Value.previousPage | Should -BeNullOrEmpty
+		$response.Value.nextPage | Should -BeNullOrEmpty
+		$response.Value.pages.Count | Should -Be 0
+	}
+
+	It 'returns rows as an empty array when the database has no items' {
+		Invoke-SqliteQuery -DataSource $script:DatabasePath -Query 'DELETE FROM [items];'
+
+		$response = Invoke-CrudHandler -Method GET -Query @{}
+
+		$response.StatusCode | Should -Be 200
+		$response.Value.rows.Count | Should -Be 0
+		$response.Value.totalItems | Should -Be 0
+	}
+
+	It 'returns created_at and updated_at as UTC RFC 3339 strings and created_at_display for views' {
+		$postResponse = Invoke-CrudHandler -Method POST -Data @{
+			item = 'Timestamp item'
+			description = 'For timestamp verification'
+		}
+
+		$postResponse.StatusCode | Should -Be 201
+		$postResponse.Value.item.created_at | Should -Match '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$'
+		$postResponse.Value.item.updated_at | Should -Match '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$'
+
+		$response = Invoke-CrudHandler -Method GET -Query @{ search = 'Timestamp item' }
+
+		$response.StatusCode | Should -Be 200
+		$response.Value.rows.Count | Should -Be 1
+		$response.Value.rows[0].created_at | Should -Match '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$'
+		$response.Value.rows[0].updated_at | Should -Match '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$'
+		$response.Value.rows[0].created_at_display | Should -Match '^\d{4}-\d{2}-\d{2} \d{2}:\d{2} UTC$'
+	}
+
+	It 'returns 404 when updating a non-existent item' {
+		$putResponse = Invoke-CrudHandler -Method PUT -Data @{
+			id = 999999
+			item = 'Non-existent'
+			description = 'Should not be found'
+		}
+
+		$putResponse.StatusCode | Should -Be 404
+		$putResponse.Value.message | Should -Be 'Item not found'
+	}
+
+	It 'returns 404 when deleting a non-existent item' {
+		$deleteResponse = Invoke-CrudHandler -Method DELETE -Query @{ id = 999999 }
+
+		$deleteResponse.StatusCode | Should -Be 404
+		$deleteResponse.Value.message | Should -Be 'Item not found'
+	}
+
+	It 'returns 400 when deleting with a missing id' {
+		$deleteResponse = Invoke-CrudHandler -Method DELETE -Query @{}
+
+		$deleteResponse.StatusCode | Should -Be 400
+		$deleteResponse.Value.message | Should -Be 'Invalid or missing id'
+	}
+
+	It 'returns 400 when deleting with a non-positive id' {
+		$deleteResponse = Invoke-CrudHandler -Method DELETE -Query @{ id = '0' }
+
+		$deleteResponse.StatusCode | Should -Be 400
+		$deleteResponse.Value.message | Should -Be 'Invalid or missing id'
+	}
+
+	It 'returns 400 when deleting with a non-numeric id' {
+		$deleteResponse = Invoke-CrudHandler -Method DELETE -Query @{ id = 'abc' }
+
+		$deleteResponse.StatusCode | Should -Be 400
+		$deleteResponse.Value.message | Should -Be 'Invalid or missing id'
+	}
+
+	It 'returns 400 when updating with an invalid id' {
+		$putResponse = Invoke-CrudHandler -Method PUT -Data @{
+			id = 'abc'
+			item = 'Valid item'
+			description = 'Valid description'
+		}
+
+		$putResponse.StatusCode | Should -Be 400
+		$putResponse.Value.message | Should -Be 'Invalid id value'
+	}
+
+	It 'returns 400 when updating with a non-positive id' {
+		$putResponse = Invoke-CrudHandler -Method PUT -Data @{
+			id = '-1'
+			item = 'Valid item'
+			description = 'Valid description'
+		}
+
+		$putResponse.StatusCode | Should -Be 400
+		$putResponse.Value.message | Should -Be 'Invalid id value'
+	}
+
+	It 'accepts item and description at the 200 and 2000 character boundaries on POST' {
+		$item200 = 'x' * 200
+		$desc2000 = 'y' * 2000
+
+		$postResponse = Invoke-CrudHandler -Method POST -Data @{
+			item = $item200
+			description = $desc2000
+		}
+
+		$postResponse.StatusCode | Should -Be 201
+		$postResponse.Value.item.item | Should -Be $item200
+		$postResponse.Value.item.description | Should -Be $desc2000
+	}
+
+	It 'accepts item and description at the 200 and 2000 character boundaries on PUT' {
+		$postResponse = Invoke-CrudHandler -Method POST -Data @{
+			item = 'Boundary put test'
+			description = 'Initial description'
+		}
+		$postResponse.StatusCode | Should -Be 201
+
+		$item200 = 'x' * 200
+		$desc2000 = 'y' * 2000
+
+		$putResponse = Invoke-CrudHandler -Method PUT -Data @{
+			id = $postResponse.Value.item.id
+			item = $item200
+			description = $desc2000
+		}
+
+		$putResponse.StatusCode | Should -Be 200
+		$putResponse.Value.message | Should -Be 'Item updated successfully'
+	}
+
+	It 'rejects item over 200 characters on POST' {
+		$postResponse = Invoke-CrudHandler -Method POST -Data @{
+			item = ('x' * 201)
+			description = 'Valid description'
+		}
+
+		$postResponse.StatusCode | Should -Be 400
+		$postResponse.Value.message | Should -Be 'Item must be between 1 and 200 characters'
+	}
+
+	It 'rejects description over 2000 characters on POST' {
+		$postResponse = Invoke-CrudHandler -Method POST -Data @{
+			item = 'Valid item'
+			description = ('y' * 2001)
+		}
+
+		$postResponse.StatusCode | Should -Be 400
+		$postResponse.Value.message | Should -Be 'Description must be between 1 and 2000 characters'
+	}
+
+	It 'rejects item over 200 characters on PUT' {
+		$postResponse = Invoke-CrudHandler -Method POST -Data @{
+			item = 'Item to update'
+			description = 'Valid description'
+		}
+		$postResponse.StatusCode | Should -Be 201
+
+		$putResponse = Invoke-CrudHandler -Method PUT -Data @{
+			id = $postResponse.Value.item.id
+			item = ('x' * 201)
+			description = 'Valid description'
+		}
+
+		$putResponse.StatusCode | Should -Be 400
+		$putResponse.Value.message | Should -Be 'Item must be between 1 and 200 characters'
+	}
+
+	It 'rejects description over 2000 characters on PUT' {
+		$postResponse = Invoke-CrudHandler -Method POST -Data @{
+			item = 'Item to update'
+			description = 'Valid description'
+		}
+		$postResponse.StatusCode | Should -Be 201
+
+		$putResponse = Invoke-CrudHandler -Method PUT -Data @{
+			id = $postResponse.Value.item.id
+			item = 'Valid item'
+			description = ('y' * 2001)
+		}
+
+		$putResponse.StatusCode | Should -Be 400
+		$putResponse.Value.message | Should -Be 'Description must be between 1 and 2000 characters'
+	}
+
+	It 'rejects empty item on POST' {
+		$postResponse = Invoke-CrudHandler -Method POST -Data @{
+			item = '   '
+			description = 'Valid description'
+		}
+
+		$postResponse.StatusCode | Should -Be 400
+		$postResponse.Value.message | Should -Be 'Missing required field: item'
+	}
+
+	It 'rejects empty description on POST' {
+		$postResponse = Invoke-CrudHandler -Method POST -Data @{
+			item = 'Valid item'
+			description = '   '
+		}
+
+		$postResponse.StatusCode | Should -Be 400
+		$postResponse.Value.message | Should -Be 'Missing required field: description'
+	}
+
+	It 'preserves punctuation and Unicode characters through POST and GET round trip' {
+		$specialItem = 'Quote "Test'' & <tag> _under %percent'
+		$specialDescription = 'Unicode: café ☕ naïve — "smart quotes"'
+
+		$postResponse = Invoke-CrudHandler -Method POST -Data @{
+			item = $specialItem
+			description = $specialDescription
+		}
+
+		$postResponse.StatusCode | Should -Be 201
+		$postResponse.Value.item.item | Should -Be $specialItem
+		$postResponse.Value.item.description | Should -Be $specialDescription
+
+		$response = Invoke-CrudHandler -Method GET -Query @{ search = 'Quote "Test' }
+
+		$response.StatusCode | Should -Be 200
+		$response.Value.rows.Count | Should -Be 1
+		$response.Value.rows[0].item | Should -Be $specialItem
+		$response.Value.rows[0].description | Should -Be $specialDescription
+	}
+
+	It 'preserves punctuation and Unicode characters through PUT round trip' {
+		$postResponse = Invoke-CrudHandler -Method POST -Data @{
+			item = 'Original item'
+			description = 'Original description'
+		}
+		$postResponse.StatusCode | Should -Be 201
+
+		$specialItem = 'Updated "Quote'' & <tag> _under %percent'
+		$specialDescription = 'Updated Unicode: café ☕ naïve — "smart quotes"'
+
+		$putResponse = Invoke-CrudHandler -Method PUT -Data @{
+			id = $postResponse.Value.item.id
+			item = $specialItem
+			description = $specialDescription
+		}
+
+		$putResponse.StatusCode | Should -Be 200
+
+		$response = Invoke-CrudHandler -Method GET -Query @{ search = 'Updated "Quote' }
+		$response.StatusCode | Should -Be 200
+		$response.Value.rows.Count | Should -Be 1
+		$response.Value.rows[0].item | Should -Be $specialItem
+		$response.Value.rows[0].description | Should -Be $specialDescription
+	}
+
+	It 'echoes the search value in the GET response envelope' {
+		$searchTerm = 'Item 3'
+		$response = Invoke-CrudHandler -Method GET -Query @{ search = $searchTerm }
+
+		$response.StatusCode | Should -Be 200
+		$response.Value.search | Should -Be $searchTerm
+	}
+
+	It 'returns search as null when no search parameter is provided' {
+		$response = Invoke-CrudHandler -Method GET -Query @{}
+
+		$response.StatusCode | Should -Be 200
+		$response.Value.search | Should -BeNullOrEmpty
+	}
+
+	It 'returns 500 with { message } envelope when the database is unavailable' {
+		$corruptDb = Join-Path $TestDrive 'corrupt.db'
+		[System.IO.File]::WriteAllBytes($corruptDb, [byte[]](1, 2, 3, 4, 5, 6, 7, 8))
+
+		$savedDb = $script:DatabasePath
+		$script:DatabasePath = $corruptDb
+		try {
+			$response = Invoke-CrudHandler -Method GET -Query @{}
+
+			$response.StatusCode | Should -Be 500
+			$response.Value.message | Should -Be 'Internal server error'
+		} finally {
+			$script:DatabasePath = $savedDb
 		}
 	}
 }

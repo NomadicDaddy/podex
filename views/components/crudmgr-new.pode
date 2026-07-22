@@ -21,6 +21,7 @@
 					type="text"
 					name="item"
 					id="item"
+					maxlength="200"
 					class="focus:border-primary-500 focus:ring-primary-500 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400"
 					placeholder="Enter item name"
 					required />
@@ -30,6 +31,7 @@
 				<textarea
 					name="description"
 					id="description"
+					maxlength="2000"
 					class="focus:border-primary-500 focus:ring-primary-500 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400"
 					placeholder="Enter description in markdown or HTML format"
 					required></textarea>

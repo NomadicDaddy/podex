@@ -11,30 +11,35 @@
 		# Parse paging inputs safely: reject non-numeric values, clamp out-of-range
 		# values, and fall back to the documented defaults of page 1 / pageSize 10.
 		$page = 1
-		if ([int]::TryParse($WebEvent.Query['page'], [ref]$page) -and $page -ge 1) {
-			# $page is already a valid positive integer
-		} else {
+		if (-not [int]::TryParse($WebEvent.Query['page'], [ref]$page) -or $page -lt 1) {
 			$page = 1
 		}
 
 		$pageSize = 10
-		if ([int]::TryParse($WebEvent.Query['pageSize'], [ref]$pageSize) -and $pageSize -ge 1) {
-			$pageSize = [Math]::Min($pageSize, 100)
-		} else {
+		if (-not [int]::TryParse($WebEvent.Query['pageSize'], [ref]$pageSize) -or $pageSize -lt 1) {
 			$pageSize = 10
 		}
+		$pageSize = [Math]::Min($pageSize, 100)
 
 		$offset = ($page - 1) * $pageSize
 
-		$sqlx = "SELECT [id], [item], [description], date([created_at]) as [created_at], [updated_at] FROM [items]"
+		# Format timestamps as UTC RFC 3339 (YYYY-MM-DDTHH:mm:ssZ) and a display
+		# variant (YYYY-MM-DD HH:mm UTC) for human-readable views.
+		$sqlx = @"
+SELECT [id], [item], [description],
+	strftime('%Y-%m-%dT%H:%M:%SZ', [created_at]) AS [created_at],
+	strftime('%Y-%m-%dT%H:%M:%SZ', [updated_at]) AS [updated_at],
+	strftime('%Y-%m-%d %H:%M UTC', [created_at]) AS [created_at_display]
+FROM [items]
+"@
 		$params = @{}
 
 		if ($search) {
-			$sqlx += " WHERE ([item] LIKE @search OR [description] LIKE @search)"
+			$sqlx += "`n	WHERE ([item] LIKE @search OR [description] LIKE @search)"
 			$params['search'] = "%$search%"
 		}
 
-		$sqlx += " ORDER BY [created_at] DESC, [id] DESC LIMIT @pageSize OFFSET @offset;"
+		$sqlx += "`n	ORDER BY [created_at] DESC, [id] DESC LIMIT @pageSize OFFSET @offset;"
 
 		$params['pageSize'] = $pageSize
 		$params['offset'] = $offset
@@ -49,24 +54,35 @@
 		$countResult = (Invoke-SqliteQuery -DataSource $db -Query $countSql -SqlParameters $countParams -As SingleValue -ErrorAction Stop)
 		$totalItems = [int]$countResult
 
-		# Write-FormattedLog -tag 'database' -log "db: $($db); sqlx: $($sqlx); search: $search; params: $($params | ConvertTo-Json -Compress)"
 		$rs = (Invoke-SqliteQuery -DataSource $db -Query $sqlx -SqlParameters $params -As PSObject -ErrorAction Stop)
+
+		# Always normalize rows to a collection so the JSON envelope has a stable
+		# array shape even when PSSQLite returns $null for an empty result set.
+		# PowerShell unwraps an empty @() from an if-expression to $null, so use
+		# an ArrayList which survives assignment.
+		$rowList = [System.Collections.ArrayList]@()
+		if ($null -ne $rs) {
+			foreach ($row in $rs) {
+				$null = $rowList.Add($row)
+			}
+		}
 
 		$startIndex = if ($totalItems -gt 0) { $offset + 1 } else { 0 }
 		$endIndex = [Math]::Min($offset + $pageSize, $totalItems)
-		$totalPages = [Math]::Ceiling($totalItems / $pageSize)
+		$totalPages = if ($pageSize -gt 0 -and $totalItems -gt 0) { [Math]::Ceiling($totalItems / $pageSize) } else { 0 }
 		$hasPreviousPage = $page -gt 1
 		$hasNextPage = $page -lt $totalPages
-		$pages = @()
+		$pageNumbers = @()
 		for ($i = 1; $i -le $totalPages; $i++) {
-			$pages += @{
+			$pageNumbers += @{
 				number = $i
 				isActive = $i -eq $page
 			}
 		}
 
 		$response = @{
-			rows = $rs
+			rows = $rowList
+			search = $search
 			startIndex = $startIndex
 			endIndex = $endIndex
 			totalItems = $totalItems
@@ -74,7 +90,7 @@
 			hasNextPage = $hasNextPage
 			previousPage = if ($hasPreviousPage) { $page - 1 } else { $null }
 			nextPage = if ($hasNextPage) { $page + 1 } else { $null }
-			pages = $pages
+			pages = $pageNumbers
 			currentPage = $page
 		}
 

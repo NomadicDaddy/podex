@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Stabilized the CRUD API contract, validation, and item data presentation
+  (`podex-crud-contract-validation-and-data-presentation`). GET `/api/crud` now
+  always returns `rows` as a stable array (using `ArrayList` to survive
+  PowerShell's empty-array unwrapping), echoes the `search` parameter in the
+  envelope, and formats `created_at` and `updated_at` as UTC RFC 3339 strings
+  (`YYYY-MM-DDTHH:mm:ssZ`) via `strftime`. A `created_at_display` field
+  (`YYYY-MM-DD HH:mm UTC`) is included for human-readable views. POST now
+  returns `201` with `{ message, item }` containing the full created record
+  with RFC 3339 timestamps, instead of a bare success message. PUT and DELETE
+  now return `404 { message }` when `changes()` reports zero affected rows,
+  distinguishing missing records from validation failures; DELETE also returns
+  `400` for non-positive or non-numeric ids. Field-length validation (item
+  1–200, description 1–2000) is enforced in POST and PUT before database
+  access and mirrored as `maxlength` attributes in `crudmgr.pode` and
+  `crudmgr-new.pode`. The table column uses `created_at_display` for readable
+  timestamps. 22 new Pester test cases added covering empty/single row arrays,
+  POST identity with timestamp format assertions, missing-record 404s, 200/2000
+  boundary acceptance, over-limit 400 rejections, punctuation/Unicode round
+  trips, exact timestamp/display formats, and search-echo behavior.
+
 ### Compliance
 
 - The v0.2.0 and v0.3.0 tags were withdrawn from the public repository and are no longer

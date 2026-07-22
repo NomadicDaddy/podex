@@ -6,24 +6,40 @@
 	Write-FormattedLog -tag 'api' -log "CRUD API: $($WebEvent.Method.ToUpper()) $($WebEvent.Path) `$isHTMX:$($isHTMX) Q: $($WebEvent.Query | ConvertTo-Json -Compress)"
 
 	try {
-		$id = $WebEvent.Query['id']
+		$idRaw = $WebEvent.Query['id']
 
-		if (-not $id -or -not [int]::TryParse($id, [ref]$null)) {
+		$id = 0
+		if (-not $idRaw -or -not [int]::TryParse([string]$idRaw, [ref]$id) -or $id -le 0) {
+			Write-FormattedLog -tag 'error' -log "Invalid or missing id"
 			Write-PodeJsonResponse -StatusCode 400 -Value @{ message = "Invalid or missing id" }
 			return
 		}
 
-		$sqlx = "DELETE FROM [items] WHERE [id] = @id;"
+		$sqlx = @"
+DELETE FROM [items] WHERE [id] = @id;
+SELECT changes() AS [affected];
+"@
 		$params = @{
-			id = [int]$id
+			id = $id
 		}
 		Write-FormattedLog -tag 'database' -log "db: $($db); sqlx: $($sqlx); id: $id"
-		Invoke-SqliteQuery -DataSource $db -Query $sqlx -SqlParameters $params -ErrorAction Stop
-		Write-FormattedLog -tag 'debug' -log "Item deleted successfully"
-		Write-PodeJsonResponse -StatusCode 200 -Value @{ message = "Item deleted successfully" }
+		$affectedResult = (Invoke-SqliteQuery -DataSource $db -Query $sqlx -SqlParameters $params -As SingleValue -ErrorAction Stop)
+		$affected = [int]$affectedResult
+
+		if ($affected -eq 0) {
+			Write-FormattedLog -tag 'error' -log "Item not found: id=$id"
+			Write-PodeJsonResponse -StatusCode 404 -Value @{ message = "Item not found" }
+			return
+		}
+
+		Write-FormattedLog -tag 'debug' -log "Item deleted successfully: id=$id"
+		Write-PodeJsonResponse -StatusCode 200 -Value @{
+			message = "Item deleted successfully"
+			id = $id
+		}
 
 	} catch {
-		Write-FormattedLog -tag 'error' -log "Error deleting item: $_"
+		Write-FormattedLog -tag 'error' -log "Error deleting item: $($_.Exception.Message)"
 		Write-PodeJsonResponse -StatusCode 500 -Value @{ message = "Internal server error" }
 	}
 

@@ -16,6 +16,13 @@
 
 		Write-FormattedLog -tag 'debug' -log "Parsed PUT data: $($data | ConvertTo-Json -Compress)"
 
+		$id = 0
+		if (-not [int]::TryParse([string]$data.id, [ref]$id) -or $id -le 0) {
+			Write-FormattedLog -tag 'error' -log "Invalid id value"
+			Write-PodeJsonResponse -StatusCode 400 -Value @{ message = "Invalid id value" }
+			return
+		}
+
 		$item = ([string]$data.item).Trim()
 		$description = ([string]$data.description).Trim()
 
@@ -31,26 +38,45 @@
 			return
 		}
 
-		$id = 0
-		if (-not [int]::TryParse([string]$data.id, [ref]$id) -or $id -le 0) {
-			Write-FormattedLog -tag 'error' -log "Invalid id value"
-			Write-PodeJsonResponse -StatusCode 400 -Value @{ message = "Invalid id value" }
+		if ($item.Length -lt 1 -or $item.Length -gt 200) {
+			Write-FormattedLog -tag 'error' -log "Invalid item length: $($item.Length)"
+			Write-PodeJsonResponse -StatusCode 400 -Value @{ message = "Item must be between 1 and 200 characters" }
 			return
 		}
 
-		$sqlx = "UPDATE [items] SET [item] = @item, [description] = @description, [updated_at] = CURRENT_TIMESTAMP WHERE [id] = @id;"
+		if ($description.Length -lt 1 -or $description.Length -gt 2000) {
+			Write-FormattedLog -tag 'error' -log "Invalid description length: $($description.Length)"
+			Write-PodeJsonResponse -StatusCode 400 -Value @{ message = "Description must be between 1 and 2000 characters" }
+			return
+		}
+
+		$sqlx = @"
+UPDATE [items] SET [item] = @item, [description] = @description, [updated_at] = CURRENT_TIMESTAMP WHERE [id] = @id;
+SELECT changes() AS [affected];
+"@
 		$params = @{
 			id = $id
 			item = $item
 			description = $description
 		}
 		Write-FormattedLog -tag 'database' -log "db: $($db); sqlx: $($sqlx); params: $($params | ConvertTo-Json -Compress)"
-		Invoke-SqliteQuery -DataSource $db -Query $sqlx -SqlParameters $params -ErrorAction Stop
-		Write-FormattedLog -tag 'debug' -log "Item updated successfully"
-		Write-PodeJsonResponse -StatusCode 200 -Value @{ message = "Item updated successfully" }
+		$affectedResult = (Invoke-SqliteQuery -DataSource $db -Query $sqlx -SqlParameters $params -As SingleValue -ErrorAction Stop)
+		$affected = [int]$affectedResult
+
+		if ($affected -eq 0) {
+			Write-FormattedLog -tag 'error' -log "Item not found: id=$id"
+			Write-PodeJsonResponse -StatusCode 404 -Value @{ message = "Item not found" }
+			return
+		}
+
+		Write-FormattedLog -tag 'debug' -log "Item updated successfully: id=$id"
+		Write-PodeJsonResponse -StatusCode 200 -Value @{
+			message = "Item updated successfully"
+			id = $id
+		}
 
 	} catch {
-		Write-FormattedLog -tag 'error' -log "Error updating item: $_"
+		Write-FormattedLog -tag 'error' -log "Error updating item: $($_.Exception.Message)"
 		Write-PodeJsonResponse -StatusCode 500 -Value @{ message = "Internal server error" }
 	}
 

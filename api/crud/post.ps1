@@ -31,14 +31,36 @@
 			return
 		}
 
-		$sqlx = "INSERT INTO [items] ([item], [description]) VALUES (@item, @description);"
+		if ($item.Length -lt 1 -or $item.Length -gt 200) {
+			Write-FormattedLog -tag 'error' -log "Invalid item length: $($item.Length)"
+			Write-PodeJsonResponse -StatusCode 400 -Value @{ message = "Item must be between 1 and 200 characters" }
+			return
+		}
+
+		if ($description.Length -lt 1 -or $description.Length -gt 2000) {
+			Write-FormattedLog -tag 'error' -log "Invalid description length: $($description.Length)"
+			Write-PodeJsonResponse -StatusCode 400 -Value @{ message = "Description must be between 1 and 2000 characters" }
+			return
+		}
+
+		$sqlx = @"
+INSERT INTO [items] ([item], [description]) VALUES (@item, @description);
+SELECT [id], [item], [description],
+	strftime('%Y-%m-%dT%H:%M:%SZ', [created_at]) AS [created_at],
+	strftime('%Y-%m-%dT%H:%M:%SZ', [updated_at]) AS [updated_at]
+FROM [items] WHERE [id] = last_insert_rowid();
+"@
 		$params = @{
 			item = $item
 			description = $description
 		}
 		Write-FormattedLog -tag 'database' -log "db: $($db); sqlx: $($sqlx); params: $($params | ConvertTo-Json -Compress)"
-		Invoke-SqliteQuery -DataSource $db -Query $sqlx -SqlParameters $params -ErrorAction Stop
-		Write-PodeJsonResponse -StatusCode 201 -Value @{ message = "Item created successfully" }
+		$created = (Invoke-SqliteQuery -DataSource $db -Query $sqlx -SqlParameters $params -As PSObject -ErrorAction Stop)
+
+		Write-PodeJsonResponse -StatusCode 201 -Value @{
+			message = "Item created successfully"
+			item = $created
+		}
 
 	} catch {
 		Write-FormattedLog -tag 'error' -log "Error in POST method: $($_.Exception.Message)"
