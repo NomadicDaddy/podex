@@ -12,6 +12,7 @@
 		<script src="/public/js/client-side-templates.js"></script>
 		<script src="/public/js/json-enc.js"></script>
 		<script src="/public/js/mustache.js"></script>
+		<script src="/public/js/crudmgr.js"></script>
 	</head>
 	<body class="flex min-h-screen flex-col bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200" hx-boost="true">
 		<div>$(Use-PodePartialView -Path 'partials/header' -Data @{ PageName = $data.PageName } ;)</div>

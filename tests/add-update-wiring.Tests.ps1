@@ -81,3 +81,36 @@ Describe 'Update row PUT field contract' {
 		$putHandler | Should -Match '\$data\.description'
 	}
 }
+
+Describe 'Controller-scoped mutation refresh' {
+	It 'removes inline hx-on mutation handlers from the table buttons' {
+		$crudmgr = Get-Content -LiteralPath (Join-Path $script:RepoRoot 'views/components/crudmgr.pode') -Raw
+		# The inline after:request triggers that fired itemChanged unconditionally
+		# are removed; the external controller now owns the refresh lifecycle.
+		$crudmgr | Should -Not -Match 'hx-on::after:request'
+	}
+
+	It 'declares only one modal wrapper in crudmgr.pode' {
+		$crudmgr = Get-Content -LiteralPath (Join-Path $script:RepoRoot 'views/components/crudmgr.pode') -Raw
+		$itemModalCount = ([regex]::Matches($crudmgr, 'id="itemModal"')).Count
+		$itemModalCount | Should -Be 1
+
+		$crudmgrNew = Get-Content -LiteralPath (Join-Path $script:RepoRoot 'views/components/crudmgr-new.pode') -Raw
+		# crudmgr-new must not carry a second modal wrapper
+		([regex]::Matches($crudmgrNew, 'id="itemModal"')).Count | Should -Be 0
+		([regex]::Matches($crudmgrNew, 'id="itemModalContent"')).Count | Should -Be 0
+	}
+
+	It 'ships the external controller through the build pipeline and layout' {
+		Test-Path -LiteralPath (Join-Path $script:RepoRoot 'src/crudmgr.js') | Should -Be $true
+
+		$main = Get-Content -LiteralPath (Join-Path $script:RepoRoot 'views/layouts/main.pode') -Raw
+		$main | Should -Match 'src="/public/js/crudmgr.js"'
+
+		$buildAssets = Get-Content -LiteralPath (Join-Path $script:RepoRoot 'scripts/build-assets.mjs') -Raw
+		$buildAssets | Should -Match "src/crudmgr\.js.*public/js/crudmgr\.js"
+
+		$manifest = Get-Content -LiteralPath (Join-Path $script:RepoRoot 'release-manifest.json') -Raw
+		$manifest | Should -Match '"public/js/crudmgr.js"'
+	}
+}

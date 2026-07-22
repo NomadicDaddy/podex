@@ -24,6 +24,7 @@
 		"public/images/podex.ico",
 		"public/images/podex.png",
 		"public/js/client-side-templates.js",
+		"public/js/crudmgr.js",
 		"public/js/htmx.js",
 		"public/js/json-enc.js",
 		"public/js/mustache.js",

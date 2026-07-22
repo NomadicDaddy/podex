@@ -7,6 +7,7 @@ const assets = [
 	['src/vendor/client-side-templates.js', 'public/js/client-side-templates.js'],
 	['src/vendor/json-enc.js', 'public/js/json-enc.js'],
 	['node_modules/htmx.org/dist/htmx.js', 'public/js/htmx.js'],
+	['src/crudmgr.js', 'public/js/crudmgr.js'],
 ];
 
 const licensedAssets = [['node_modules/mustache/mustache.js', 'public/js/mustache.js']];
