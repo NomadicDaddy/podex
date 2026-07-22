@@ -236,6 +236,21 @@
 	}
 
 	/**
+	 * Toggle aria-busy on the #crud-list live region while htmx requests are
+	 * in flight so assistive technology can announce loading state.
+	 * @param {boolean} busy
+	 */
+	function setBusy(busy) {
+		const region = document.getElementById('crud-list');
+		if (!region) return;
+		if (busy) {
+			region.setAttribute('aria-busy', 'true');
+		} else {
+			region.setAttribute('aria-busy', 'false');
+		}
+	}
+
+	/**
 	 * Wire the controller to the #crud container and document-level handlers.
 	 * Safe to call multiple times: it locates elements fresh each time.
 	 */
@@ -250,6 +265,11 @@
 		// controls (inside #crud). Listening on document.body catches both while
 		// the init guard above scopes the controller to the CRUD page.
 		document.body.addEventListener('htmx:after:request', handleAfterRequest);
+
+		// Toggle aria-busy on the #crud-list live region during htmx requests so
+		// screen readers announce loading state and swap completion.
+		document.body.addEventListener('htmx:before:request', () => setBusy(true));
+		document.body.addEventListener('htmx:after:request', () => setBusy(false));
 
 		// Add Item button: open the modal. The htmx GET that loads the form body
 		// is declared on the button itself; openModal runs once that settles.

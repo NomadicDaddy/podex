@@ -1,7 +1,5 @@
 @import 'tailwindcss';
 
-@custom-variant dark (&:is(.dark *));
-
 @theme {
 	--color-primary-50: #eff6ff;
 	--color-primary-100: #dbeafe;
@@ -30,6 +28,10 @@
 		border-color: var(--color-gray-200, currentColor);
 	}
 
+	:root {
+		color-scheme: light dark;
+	}
+
 	/* Reserve the scrollbar gutter on every page so navigating between a long
 	   page (scrollbar visible) and a short one (scrollbar hidden) doesn't cause
 	   a horizontal layout shift. */
@@ -43,21 +45,12 @@
 		@apply max-w-none space-y-4 p-6 text-gray-700;
 	}
 
-	.dark .podex-content {
-		@apply text-gray-300;
-	}
-
-	.podex-content h3 {
+	.podex-content h2 {
 		@apply pt-4 text-xl font-semibold text-gray-900;
 	}
 
-	.podex-content h3:first-child {
+	.podex-content h2:first-child {
 		@apply pt-0;
-	}
-
-	.dark .podex-content h3,
-	.dark .podex-content strong {
-		@apply text-white;
 	}
 
 	.podex-content ul {
@@ -76,10 +69,6 @@
 		@apply underline;
 	}
 
-	.dark .podex-content a {
-		@apply text-blue-400;
-	}
-
 	.podex-content strong {
 		@apply font-semibold text-gray-900;
 	}
@@ -88,16 +77,31 @@
 		@apply rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm;
 	}
 
-	.dark .podex-content code {
-		@apply bg-gray-900;
-	}
-
 	.podex-content pre {
 		@apply overflow-x-auto rounded-lg bg-gray-900 p-4 text-gray-100;
 	}
 
 	.podex-content pre code {
 		@apply bg-transparent p-0 text-inherit;
+	}
+
+	@media (prefers-color-scheme: dark) {
+		.podex-content {
+			@apply text-gray-300;
+		}
+
+		.podex-content h2,
+		.podex-content strong {
+			@apply text-white;
+		}
+
+		.podex-content a {
+			@apply text-blue-400;
+		}
+
+		.podex-content code {
+			@apply bg-gray-900;
+		}
 	}
 }
 
@@ -134,33 +138,35 @@
 		--radius: 0.5rem;
 	}
 
-	.dark {
-		--background: 222.2 84% 4.9%;
-		--foreground: 210 40% 98%;
+	@media (prefers-color-scheme: dark) {
+		:root {
+			--background: 222.2 84% 4.9%;
+			--foreground: 210 40% 98%;
 
-		--card: 222.2 84% 4.9%;
-		--card-foreground: 210 40% 98%;
+			--card: 222.2 84% 4.9%;
+			--card-foreground: 210 40% 98%;
 
-		--popover: 222.2 84% 4.9%;
-		--popover-foreground: 210 40% 98%;
+			--popover: 222.2 84% 4.9%;
+			--popover-foreground: 210 40% 98%;
 
-		--primary: 210 40% 98%;
-		--primary-foreground: 222.2 47.4% 11.2%;
+			--primary: 210 40% 98%;
+			--primary-foreground: 222.2 47.4% 11.2%;
 
-		--secondary: 217.2 32.6% 17.5%;
-		--secondary-foreground: 210 40% 98%;
+			--secondary: 217.2 32.6% 17.5%;
+			--secondary-foreground: 210 40% 98%;
 
-		--muted: 217.2 32.6% 17.5%;
-		--muted-foreground: 215 20.2% 65.1%;
+			--muted: 217.2 32.6% 17.5%;
+			--muted-foreground: 215 20.2% 65.1%;
 
-		--accent: 217.2 32.6% 17.5%;
-		--accent-foreground: 210 40% 98%;
+			--accent: 217.2 32.6% 17.5%;
+			--accent-foreground: 210 40% 98%;
 
-		--destructive: 0 62.8% 30.6%;
-		--destructive-foreground: 210 40% 98%;
+			--destructive: 0 62.8% 30.6%;
+			--destructive-foreground: 210 40% 98%;
 
-		--border: 217.2 32.6% 17.5%;
-		--input: 217.2 32.6% 17.5%;
-		--ring: 212.7 26.8% 83.9%;
+			--border: 217.2 32.6% 17.5%;
+			--input: 217.2 32.6% 17.5%;
+			--ring: 212.7 26.8% 83.9%;
+		}
 	}
 }

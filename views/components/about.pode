@@ -2,11 +2,12 @@
 	<div class="mx-auto max-w-(--breakpoint-xl)">
 		<div class="relative overflow-hidden bg-white shadow-md sm:rounded-lg dark:bg-gray-800">
 			<div class="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
-				<h2 class="text-2xl font-bold text-gray-900 dark:text-white">Podex - PowerShell/Pode + htmx Framework for Building Web Applications</h2>
+				<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Podex</h1>
+				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">PowerShell/Pode + htmx Framework for Building Web Applications</p>
 				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">An opinionated full-stack starter powered by PowerShell on the backend and htmx on the frontend.</p>
 			</div>
 			<div class="podex-content">
-				<h3 id="table-of-contents">Table of Contents</h3>
+				<h2 id="table-of-contents">Table of Contents</h2>
 				<ul>
 					<li><a href="#introduction">Introduction</a></li>
 					<li><a href="#features">Features</a></li>
@@ -16,9 +17,9 @@
 					<li><a href="#contributing">Contributing</a></li>
 					<li><a href="#license">License</a></li>
 				</ul>
-				<h3 id="introduction">Introduction</h3>
+				<h2 id="introduction">Introduction</h2>
 				<p>Podex is a framework for building full-stack web applications using PowerShell/Pode for the backend and htmx for the frontend.</p>
-				<h3 id="features">Features</h3>
+				<h2 id="features">Features</h2>
 				<ul>
 					<li>File-based API routing that maps cleanly to HTTP verbs</li>
 					<li>htmx-driven request cycle with client-side Mustache templating</li>
@@ -26,7 +27,7 @@
 					<li>SQLite storage kept in the application <code>data/</code> directory</li>
 					<li>Built-in OpenAPI / Swagger docs and request logging</li>
 				</ul>
-				<h3 id="technical-stack">Technical Stack</h3>
+				<h2 id="technical-stack">Technical Stack</h2>
 				<ul>
 					<li>
 						<strong>Backend</strong>: <a href="https://github.com/PowerShell/PowerShell">PowerShell Core</a>, <a href="https://github.com/Badgerati/Pode">Pode</a>,
@@ -37,7 +38,7 @@
 						<a href="https://tailwindcss.com/">Tailwind CSS</a>
 					</li>
 				</ul>
-				<h3 id="setup">Setup</h3>
+				<h2 id="setup">Setup</h2>
 				<ol>
 					<li>
 						Clone the repository:
@@ -53,7 +54,7 @@ cd podex</code></pre>
 						<pre><code>powershell -Command ". ./.build.ps1"</code></pre>
 					</li>
 				</ol>
-				<h3 id="running-the-project">Running the Project</h3>
+				<h2 id="running-the-project">Running the Project</h2>
 				<ol>
 					<li>
 						Start the server:
@@ -61,7 +62,7 @@ cd podex</code></pre>
 					</li>
 					<li>Open your browser and navigate to <code>http://localhost:8433</code>.</li>
 				</ol>
-				<h3 id="contributing">Contributing</h3>
+				<h2 id="contributing">Contributing</h2>
 				<ol>
 					<li>Fork the repository.</li>
 					<li>Create a new branch (<code>git checkout -b feature-branch</code>).</li>
@@ -70,7 +71,7 @@ cd podex</code></pre>
 					<li>Push to the branch (<code>git push origin feature-branch</code>).</li>
 					<li>Create a new Pull Request.</li>
 				</ol>
-				<h3 id="license">License</h3>
+				<h2 id="license">License</h2>
 				<p>This project is licensed under the MIT License.</p>
 			</div>
 		</div>

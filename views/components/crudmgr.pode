@@ -3,27 +3,29 @@
 	<div class="mx-auto max-w-(--breakpoint-xl)">
 		<div class="relative overflow-hidden bg-white shadow-md sm:rounded-lg dark:bg-gray-800">
 			<div class="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
-				<h2 class="text-2xl font-bold text-gray-900 dark:text-white">Item Management</h2>
+				<h1 class="text-2xl font-bold text-gray-900 dark:text-white">CRUD Manager</h1>
 				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Create, update, search, and delete items.</p>
 			</div>
 			<!-- Item Content -->
-			<div
-				id="crud"
-				hx-trigger="load, itemChanged from:body"
-				hx-get="/api/crud"
-				hx-indicator="#loading"
-				hx-ext="json-enc, client-side-templates"
-				hx-swap="innerHTML"
-				hx-include="#simple-search, #current-page"
-				mustache-template="item-template"></div>
+			<div id="crud-list" aria-live="polite" aria-atomic="false">
+				<div
+					id="crud"
+					hx-trigger="load, itemChanged from:body"
+					hx-get="/api/crud"
+					hx-indicator="#loading"
+					hx-ext="json-enc, client-side-templates"
+					hx-swap="innerHTML"
+					hx-include="#simple-search, #current-page"
+					mustache-template="item-template"></div>
+			</div>
 		</div>
 	</div>
 </section>
 
 <!-- Loading Indicator -->
-<div id="loading" class="htmx-indicator">
+<div id="loading" class="htmx-indicator" aria-hidden="true">
 	<div class="flex items-center justify-center p-10">
-		<div class="border-t-primary-600 h-6 w-6 animate-spin rounded-full border-2 border-gray-300"></div>
+		<div class="border-t-primary-600 h-6 w-6 animate-spin rounded-full border-2 border-gray-300" aria-hidden="true"></div>
 	</div>
 </div>
 
@@ -90,10 +92,10 @@
 				<tr class="border-b border-gray-100 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/40">
 					<td class="px-4 py-3 align-top"><input type="hidden" name="id" value="{{id}}" required />{{id}}</td>
 					<td class="px-2 py-2 align-top">
-						<input type="text" name="item" value="{{item}}" maxlength="200" required class="block w-full rounded-md border border-transparent bg-transparent px-2 py-1 text-sm text-gray-900 hover:border-gray-300 focus:border-primary-500 focus:bg-white focus:ring-1 focus:ring-primary-500 focus:outline-hidden dark:text-white dark:hover:border-gray-600 dark:focus:border-primary-500 dark:focus:bg-gray-700" />
+						<input type="text" name="item" value="{{item}}" maxlength="200" required aria-label="Item name {{id}}" class="block w-full rounded-md border border-transparent bg-transparent px-2 py-1 text-sm text-gray-900 hover:border-gray-300 focus:border-primary-500 focus:bg-white focus:ring-1 focus:ring-primary-500 focus:outline-hidden dark:text-white dark:hover:border-gray-600 dark:focus:border-primary-500 dark:focus:bg-gray-700" />
 					</td>
 					<td class="px-2 py-2 align-top">
-						<input type="text" name="description" value="{{description}}" maxlength="2000" required class="block w-full rounded-md border border-transparent bg-transparent px-2 py-1 text-sm text-gray-900 hover:border-gray-300 focus:border-primary-500 focus:bg-white focus:ring-1 focus:ring-primary-500 focus:outline-hidden dark:text-white dark:hover:border-gray-600 dark:focus:border-primary-500 dark:focus:bg-gray-700" />
+						<input type="text" name="description" value="{{description}}" maxlength="2000" required aria-label="Description {{id}}" class="block w-full rounded-md border border-transparent bg-transparent px-2 py-1 text-sm text-gray-900 hover:border-gray-300 focus:border-primary-500 focus:bg-white focus:ring-1 focus:ring-primary-500 focus:outline-hidden dark:text-white dark:hover:border-gray-600 dark:focus:border-primary-500 dark:focus:bg-gray-700" />
 					</td>
 					<td class="px-4 py-3 align-top whitespace-nowrap">{{created_at_display}}</td>
 					<td class="flex items-start justify-end px-4 py-3">
