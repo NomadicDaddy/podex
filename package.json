@@ -26,7 +26,7 @@
 		"licenses:generate": "bun scripts/generate-third-party-licenses.mjs",
 		"check:license-core": "bun scripts/check-license-core.ts",
 		"check:licenses": "bun run check:license-core && bun scripts/generate-third-party-licenses.mjs --check",
-		"analyze": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -Command \"Import-Module PSScriptAnalyzer ; Invoke-ScriptAnalyzer -Path ./\"",
+		"analyze": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File ./tools/analyze.ps1",
 		"test": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass \"./tools/test.ps1\"",
 		"build": "pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass \"./.build.ps1\"",
 		"release:package": "bun run assets:build && bun run check:licenses && bun scripts/package-release.mjs",

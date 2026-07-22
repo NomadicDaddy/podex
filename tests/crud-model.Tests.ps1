@@ -15,7 +15,10 @@ BeforeAll {
 	}
 
 	function Write-FormattedLog {
-		param([string]$tag, [string]$log)
+		param([string]$Tag, [string]$Log)
+
+		$null = $Tag
+		$null = $Log
 	}
 
 	function Write-PodeJsonResponse {
@@ -24,9 +27,11 @@ BeforeAll {
 			[int]$StatusCode
 		)
 
-		$script:Response = @{
-			StatusCode = $StatusCode
-			Value = $Value
+		process {
+			$script:Response = @{
+				StatusCode = $StatusCode
+				Value = $Value
+			}
 		}
 	}
 
