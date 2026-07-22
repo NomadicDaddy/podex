@@ -531,6 +531,101 @@ Describe 'Canonical CRUD item model' {
 		$response.Value.search | Should -BeNullOrEmpty
 	}
 
+	It 'treats a percent sign in search input as a literal character' {
+		# Insert an item containing a literal percent sign. The seed data has none,
+		# so only an escaped LIKE should match it.
+		Invoke-SqliteQuery -DataSource $script:DatabasePath -Query "INSERT INTO [items] ([item], [description]) VALUES (@item, @description);" -SqlParameters @{ item = 'Discount 50%'; description = 'Literal percent test' }
+
+		$response = Invoke-CrudHandler -Method GET -Query @{ search = '50%' }
+
+		$response.StatusCode | Should -Be 200
+		$response.Value.totalItems | Should -Be 1
+		$response.Value.rows[0].item | Should -Be 'Discount 50%'
+	}
+
+	It 'treats an underscore in search input as a literal character' {
+		Invoke-SqliteQuery -DataSource $script:DatabasePath -Query "INSERT INTO [items] ([item], [description]) VALUES (@item, @description);" -SqlParameters @{ item = 'snake_case_item'; description = 'Literal underscore test' }
+
+		$response = Invoke-CrudHandler -Method GET -Query @{ search = 'snake_case_item' }
+
+		$response.StatusCode | Should -Be 200
+		$response.Value.totalItems | Should -Be 1
+		$response.Value.rows[0].item | Should -Be 'snake_case_item'
+	}
+
+	It 'treats a backslash in search input as a literal character' {
+		Invoke-SqliteQuery -DataSource $script:DatabasePath -Query "INSERT INTO [items] ([item], [description]) VALUES (@item, @description);" -SqlParameters @{ item = 'path\to\file'; description = 'Literal backslash test' }
+
+		$response = Invoke-CrudHandler -Method GET -Query @{ search = 'path\to\file' }
+
+		$response.StatusCode | Should -Be 200
+		$response.Value.totalItems | Should -Be 1
+		$response.Value.rows[0].item | Should -Be 'path\to\file'
+	}
+
+	It 'does not treat an unescaped percent as a wildcard that matches every item' {
+		# A naive LIKE with no escaping would treat % as "match zero or more chars"
+		# and return every row. The escaped predicate must return only rows that
+		# literally contain the search term.
+		Invoke-SqliteQuery -DataSource $script:DatabasePath -Query "INSERT INTO [items] ([item], [description]) VALUES (@item, @description);" -SqlParameters @{ item = 'LiteralPercent%'; description = 'Has percent' }
+
+		$response = Invoke-CrudHandler -Method GET -Query @{ search = '%' }
+
+		$response.StatusCode | Should -Be 200
+		$response.Value.totalItems | Should -Be 1
+		$response.Value.rows[0].item | Should -Be 'LiteralPercent%'
+	}
+
+	It 'clamps an out-of-range page to the last available page' {
+		$seeded = Invoke-SqliteQuery -DataSource $script:DatabasePath -Query 'SELECT COUNT(*) AS [count] FROM [items];' -As PSObject
+		$totalPages = [Math]::Ceiling($seeded.count / 10)
+
+		$response = Invoke-CrudHandler -Method GET -Query @{ page = '9999'; pageSize = '10' }
+
+		$response.StatusCode | Should -Be 200
+		# currentPage is clamped to the last page, not 9999
+		$response.Value.currentPage | Should -Be $totalPages
+		$response.Value.hasNextPage | Should -BeFalse
+		$response.Value.nextPage | Should -BeNullOrEmpty
+		$response.Value.hasPreviousPage | Should -BeTrue
+		# The last page's rows must be present and consistent with the clamped page
+		$response.Value.rows.Count | Should -Be ($seeded.count - (($totalPages - 1) * 10))
+		$response.Value.totalItems | Should -Be $seeded.count
+	}
+
+	It 'clamps an out-of-range page with a search filter to the last matching page' {
+		# Seed items that match a search so there is a small number of pages
+		for ($i = 1; $i -le 15; $i++) {
+			Invoke-SqliteQuery -DataSource $script:DatabasePath -Query "INSERT INTO [items] ([item], [description]) VALUES (@item, @description);" -SqlParameters @{ item = "Searchable $i"; description = 'Filter test' }
+		}
+
+		$response = Invoke-CrudHandler -Method GET -Query @{ search = 'Searchable'; page = '9999'; pageSize = '5' }
+
+		$totalItems = (Invoke-SqliteQuery -DataSource $script:DatabasePath -Query "SELECT COUNT(*) AS [count] FROM [items] WHERE [item] LIKE '%Searchable%';" -As SingleValue)
+		$expectedLastPage = [Math]::Ceiling($totalItems / 5)
+
+		$response.StatusCode | Should -Be 200
+		$response.Value.currentPage | Should -Be $expectedLastPage
+		$response.Value.hasNextPage | Should -BeFalse
+		$response.Value.totalItems | Should -Be $totalItems
+	}
+
+	It 'echoes the currentPage in the response so the template can bind it' {
+		$response = Invoke-CrudHandler -Method GET -Query @{ page = '2'; pageSize = '10' }
+
+		$response.StatusCode | Should -Be 200
+		$response.Value.currentPage | Should -Be 2
+	}
+
+	It 'preserves the search value in the response for a filtered page-2 request' {
+		$searchTerm = 'Item'
+		$response = Invoke-CrudHandler -Method GET -Query @{ search = $searchTerm; page = '2'; pageSize = '5' }
+
+		$response.StatusCode | Should -Be 200
+		$response.Value.search | Should -Be $searchTerm
+		$response.Value.currentPage | Should -Be 2
+	}
+
 	It 'returns 500 with { message } envelope when the database is unavailable' {
 		$corruptDb = Join-Path $TestDrive 'corrupt.db'
 		[System.IO.File]::WriteAllBytes($corruptDb, [byte[]](1, 2, 3, 4, 5, 6, 7, 8))
@@ -545,5 +640,69 @@ Describe 'Canonical CRUD item model' {
 		} finally {
 			$script:DatabasePath = $savedDb
 		}
+	}
+}
+
+Describe 'Search and pagination template contract' {
+	BeforeAll {
+		$script:RepoRoot = (Resolve-Path "$PSScriptRoot/..").Path
+		$script:Crudmgr = Get-Content -LiteralPath (Join-Path $script:RepoRoot 'views/components/crudmgr.pode') -Raw
+	}
+
+	It 'uses type=search on the search input (not type=text)' {
+		$script:Crudmgr | Should -Match 'type="search"'
+	}
+
+	It 'binds the search value from the response envelope' {
+		$script:Crudmgr | Should -Match 'value="\{\{search\}\}"'
+	}
+
+	It 'does not mark the search input as required' {
+		# Extract just the search input block and assert it has no required attr
+		$searchInputPattern = '(?s)<input[^>]*id="simple-search"[^>]*>'
+		$searchInput = ([regex]::Match($script:Crudmgr, $searchInputPattern)).Value
+		$searchInput | Should -Not -Match '\brequired\b'
+	}
+
+	It 'removes every hx-params attribute from the template' {
+		$script:Crudmgr | Should -Not -Match 'hx-params'
+	}
+
+	It 'renders a hidden current-page input bound to currentPage' {
+		$script:Crudmgr | Should -Match 'id="current-page"'
+		$script:Crudmgr | Should -Match 'name="page"'
+		$script:Crudmgr | Should -Match 'value="\{\{currentPage\}\}"'
+	}
+
+	It 'declares hx-include on the #crud container for search and page' {
+		$script:Crudmgr | Should -Match 'hx-include="#simple-search, #current-page"'
+	}
+
+	It 'renders pagination controls as buttons, not anchor links' {
+		# Page links must be <button> elements with type=button, not <a href="#">
+		$pageLinkPattern = 'class="page-link'
+		$pageLinkMatches = ([regex]::Matches($script:Crudmgr, $pageLinkPattern)).Count
+		$pageLinkMatches | Should -BeGreaterOrEqual 3
+		# No page-link should be on an <a> tag
+		$anchorPageLinks = ([regex]::Matches($script:Crudmgr, '<a[^>]*class="page-link')).Count
+		$anchorPageLinks | Should -Be 0
+	}
+
+	It 'omits htmx actions from disabled controls' {
+		# The disabled guard wraps the entire button including hx-get, so a disabled
+		# control cannot issue a request. Assert the Mustache disabled guard exists.
+		$script:Crudmgr | Should -Match '\{\{\^hasPreviousPage\}\}disabled'
+		$script:Crudmgr | Should -Match '\{\{\^hasNextPage\}\}disabled'
+		$script:Crudmgr | Should -Match 'aria-disabled="true"'
+	}
+
+	It 'sets aria-current=page only on the active page button' {
+		$script:Crudmgr | Should -Match '\{\{#isActive\}\}aria-current="page"\{\{/isActive\}\}'
+	}
+
+	It 'includes the search input in pagination button requests' {
+		# Each pagination button carries hx-include for the search + current page
+		$paginationIncludes = ([regex]::Matches($script:Crudmgr, 'hx-include="#simple-search, #current-page"')).Count
+		$paginationIncludes | Should -BeGreaterOrEqual 3
 	}
 }
