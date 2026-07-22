@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Compliance
+
+- The v0.2.0 and v0.3.0 tags were withdrawn from the public repository and are no longer
+  downloadable. This supersedes the 0.4.0 note below, which recorded v0.2.0 as remaining available
+  as a historical artifact. v0.4.0 is now the only published release. Neither tag carried release
+  notes or a verified archive, and v0.2.0 additionally distributed `public/js/mustache.js` without
+  its MIT copyright notice, so withdrawal also ends that non-compliant distribution. The underlying
+  commits remain in history for anyone reconstructing the record: v0.2.0 pointed at `afcb6c0` and
+  v0.3.0 at `c98f417`.
+
 ## [0.4.0] - 2026-07-22
 
 ### Added

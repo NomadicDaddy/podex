@@ -74,8 +74,11 @@ fails the gate.
 
 ## Release archive requirements
 
-Use v0.3.0 or later for downloadable archives. Archives from v0.2.0 and earlier omit the MIT
-copyright notice from `public/js/mustache.js` and do not contain third-party license documents.
+Use v0.4.0 or later for downloadable archives. It is the only published release: the v0.2.0 and
+v0.3.0 tags were withdrawn, and no archive is distributed for either. Archives from v0.2.0 and
+earlier also omitted the MIT copyright notice from `public/js/mustache.js` and contained no
+third-party license documents, so any copy still in circulation should not be redistributed.
+
 Before publishing a tag, verify its Mustache notice with `bun run release:check-tag <tag>`.
 
 ## Contributing
