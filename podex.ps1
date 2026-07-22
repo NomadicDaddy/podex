@@ -55,6 +55,27 @@ Start-PodeServer -Name 'Podex' -Threads 5 -ScriptBlock {
 		Add-PodeEndpoint -Address $($cfg.PodeCfg.HttpUrl) -Port $($cfg.PodeCfg.HttpPort) -Protocol Http
 	}
 
+	# security response headers (defense-in-depth against XSS, clickjacking,
+	# MIME-sniffing, and transport downgrade). Strict-Transport-Security is
+	# added only when the endpoint is HTTPS so the default HTTP development
+	# endpoint never advertises a transport policy it cannot honour.
+	# Content-Security-Policy permits first-party assets only; it relies on
+	# the modal controller in src/crudmgr.js so no inline script is required.
+	Set-PodeSecurityContentTypeOptions
+	Set-PodeSecurityReferrerPolicy -Type No-Referrer
+	Set-PodeSecurityFrameOptions -Type Deny
+	Set-PodeSecurityContentSecurityPolicy `
+		-Default 'self' `
+		-Scripts 'self' `
+		-Style 'self' `
+		-Image 'self' `
+		-Connect 'self' `
+		-Object 'none' `
+		-FrameAncestor 'none'
+	if ($cfg.PodeCfg.HttpsEnabled) {
+		Set-PodeSecurityStrictTransportSecurity -Duration 31536000 -IncludeSubDomains
+	}
+
 	# static routes
 	Add-PodeStaticRoute -Path '/public' -Source './public'
 
