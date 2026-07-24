@@ -102,9 +102,11 @@ Start-PodeServer -Name 'Podex' -Threads 5 -ScriptBlock {
 	# static routes
 	Add-PodeStaticRoute -Path '/public' -Source './public'
 
-	# front-end routes
-	Add-PodeRoute -Path '/' -Method Get, Post -ScriptBlock { Write-PodeViewResponse -Path 'layouts/main' -Data @{ PageName = 'Home'; Title = 'Home'; Components = @('about'); } }
-	Add-PodeRoute -Path '/crudmgr'	-Method Get, Post -ScriptBlock { Write-PodeViewResponse -Path 'layouts/main' -Data @{ PageName = 'CRUDMgr'; Title = 'CRUD Manager'; Components = @('crudmgr'); } }
+	# front-end routes. Pages only render views; nothing POSTs to them (the
+	# only form targets /api/crud), so they are registered GET-only to avoid
+	# exposing purposeless POST surface that hx-boost navigation never uses.
+	Add-PodeRoute -Path '/' -Method Get -ScriptBlock { Write-PodeViewResponse -Path 'layouts/main' -Data @{ PageName = 'Home'; Title = 'Home'; Components = @('about'); } }
+	Add-PodeRoute -Path '/crudmgr' -Method Get -ScriptBlock { Write-PodeViewResponse -Path 'layouts/main' -Data @{ PageName = 'CRUDMgr'; Title = 'CRUD Manager'; Components = @('crudmgr'); } }
 
 	# htmx routes (html only)
 	Add-PodeRoute -Path '/htmx/item-new' -Method Get -ScriptBlock { Write-PodeViewResponse -Path 'layouts/bare' -Data @{ Components = @('crudmgr-new'); } }
