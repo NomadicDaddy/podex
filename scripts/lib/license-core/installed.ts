@@ -87,7 +87,7 @@ async function readManifest(path: string): Promise<null | PackageManifest> {
 
 export async function collectInstalledPackages(
 	root: string,
-	workspaces: readonly string[]
+	workspaces: readonly string[],
 ): Promise<InstalledPackage[]> {
 	const roots = [root, ...workspaces.map((workspace) => join(root, workspace))];
 	const pending = roots.map((path) => join(path, 'node_modules'));
@@ -129,6 +129,6 @@ export async function collectInstalledPackages(
 	}
 
 	return [...packages.values()].sort(
-		(a, b) => byCodepoint(a.name, b.name) || byCodepoint(a.version, b.version)
+		(a, b) => byCodepoint(a.name, b.name) || byCodepoint(a.version, b.version),
 	);
 }

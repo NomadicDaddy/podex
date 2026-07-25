@@ -73,7 +73,7 @@ if (sample !== undefined) {
 if (failures.length > 0) {
 	for (const failure of failures) {
 		console.error(
-			`License core fixture failed: ${failure.license} expected ${failure.expected}.`
+			`License core fixture failed: ${failure.license} expected ${failure.expected}.`,
 		);
 	}
 	exit(1);

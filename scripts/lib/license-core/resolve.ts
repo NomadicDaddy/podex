@@ -75,7 +75,7 @@ async function findNestedVersion(
 	nodeModules: string,
 	name: string,
 	version: string,
-	depth: number
+	depth: number,
 ): Promise<null | string> {
 	if (depth > 5) return null;
 	let entries;
@@ -95,7 +95,7 @@ async function findNestedVersion(
 			join(packageDir, 'node_modules'),
 			name,
 			version,
-			depth + 1
+			depth + 1,
 		);
 		if (found !== null) return found;
 	}
@@ -106,7 +106,7 @@ export async function resolveInstalledPackage(
 	root: string,
 	workspaces: readonly string[],
 	name: string,
-	version: string
+	version: string,
 ): Promise<null | string> {
 	const encoded = name.replace('/', '+');
 	const candidates = [

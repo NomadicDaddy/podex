@@ -25,7 +25,7 @@ function npmTable(names, installed) {
 		names.map((name) => {
 			const info = installed.get(name);
 			return [`\`${name}\``, info.version, info.license];
-		})
+		}),
 	);
 }
 
@@ -38,7 +38,7 @@ function isPlatformSpecific(manifest) {
 function renderSummary({ directPackages, graph, installed }) {
 	const flagged = graph.filter(
 		(entry) =>
-			/GPL|MPL|CDDL|EUPL|SSPL/i.test(entry.license) && !isPlatformSpecific(entry.manifest)
+			/GPL|MPL|CDDL|EUPL|SSPL/i.test(entry.license) && !isPlatformSpecific(entry.manifest),
 	);
 	const flaggedRows = flagged.map((entry) => [`\`${entry.name}\``, entry.version, entry.license]);
 	const browserRows = browserAssets.map((asset) => {
@@ -144,7 +144,7 @@ async function renderNotices(installed) {
 		const info = installed.get(asset.name);
 		const licenseText = (await findLicenseText(root, info.directory)).trim();
 		sections.push(
-			`## ${info.name}@${info.version}\n\nLicense: ${info.license}\n\n${licenseText}`
+			`## ${info.name}@${info.version}\n\nLicense: ${info.license}\n\n${licenseText}`,
 		);
 	}
 
@@ -193,14 +193,14 @@ async function main() {
 	if (missing.size > 0) {
 		throw new Error(
 			`Declared dependencies are missing from the installed tree, so the license closure is ` +
-				`incomplete: ${[...missing].sort().join(', ')}. Run \`bun install --frozen-lockfile\`.`
+				`incomplete: ${[...missing].sort().join(', ')}. Run \`bun install --frozen-lockfile\`.`,
 		);
 	}
 
 	const unknown = graph.filter((entry) => entry.license === 'UNKNOWN');
 	if (unknown.length > 0) {
 		throw new Error(
-			`Installed packages lack license metadata: ${unknown.map((entry) => `${entry.name}@${entry.version}`).join(', ')}`
+			`Installed packages lack license metadata: ${unknown.map((entry) => `${entry.name}@${entry.version}`).join(', ')}`,
 		);
 	}
 	const restrictive = graph.filter((entry) => entry.license === 'RESTRICTIVE');
@@ -208,7 +208,7 @@ async function main() {
 		throw new Error(
 			`Installed packages carry restrictive, source-available, non-commercial, or proprietary license terms that require manual review: ${restrictive
 				.map((entry) => `${entry.name}@${entry.version}`)
-				.join(', ')}. Resolve or exclude the package before generating license documents.`
+				.join(', ')}. Resolve or exclude the package before generating license documents.`,
 		);
 	}
 	const installed = new Map();
@@ -228,7 +228,7 @@ async function main() {
 		console.log(
 			checkOnly
 				? 'Third-party license documents match the installed packages and release assets.'
-				: 'Generated THIRD_PARTY_LICENSES.md and THIRD_PARTY_NOTICES.md.'
+				: 'Generated THIRD_PARTY_LICENSES.md and THIRD_PARTY_NOTICES.md.',
 		);
 		return;
 	}

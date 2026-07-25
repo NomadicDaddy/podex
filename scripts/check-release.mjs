@@ -66,7 +66,7 @@ async function verifyTree(treeRoot) {
 	}
 	if (
 		!summary.includes(
-			'Platform-specific optional build packages are intentionally not serialized'
+			'Platform-specific optional build packages are intentionally not serialized',
 		)
 	) {
 		throw new Error('Third-party summary omits the platform-neutral generation policy.');
@@ -113,7 +113,7 @@ function extractArchive(archive, scratch) {
 			'-Command',
 			`Expand-Archive -Path '${archive.replace(/'/g, "''")}' -DestinationPath '${scratch.replace(/'/g, "''")}' -Force`,
 		],
-		{ encoding: 'utf8' }
+		{ encoding: 'utf8' },
 	);
 
 	if (result.error) {
@@ -133,7 +133,7 @@ async function main() {
 
 	if (!(await exists(archive))) {
 		throw new Error(
-			`Release archive not found: ${relative(root, archive)}\nRun 'bun run release:package' first.`
+			`Release archive not found: ${relative(root, archive)}\nRun 'bun run release:package' first.`,
 		);
 	}
 
@@ -153,7 +153,7 @@ async function main() {
 		await verifyTree(scratch);
 
 		console.log(
-			`Verified ${relative(root, archive)}: ${entries.length} top-level entries and all notices present.`
+			`Verified ${relative(root, archive)}: ${entries.length} top-level entries and all notices present.`,
 		);
 	} finally {
 		await rm(scratch, { force: true, recursive: true });

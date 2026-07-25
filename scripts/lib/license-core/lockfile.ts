@@ -49,7 +49,7 @@ function packageEntry(value: unknown): { meta: LockEntry; spec: string } | null 
 	// was resolved (registry vs git/github/tarball/folder). Locate it by shape rather than by a
 	// fixed index, so an entry whose meta is not element [2] still has its edges walked.
 	const meta = value.find(
-		(element) => typeof element === 'object' && element !== null && !Array.isArray(element)
+		(element) => typeof element === 'object' && element !== null && !Array.isArray(element),
 	);
 	return { meta: (meta as LockEntry | undefined) ?? {}, spec: value[0] };
 }
@@ -63,7 +63,7 @@ function splitSpec(spec: string): LockedPackage | null {
 function resolveKey(
 	packages: Record<string, unknown>,
 	fromChain: string[],
-	name: string
+	name: string,
 ): { chain: string[]; key: string } | null {
 	for (let depth = fromChain.length; depth >= 0; depth -= 1) {
 		const chain = [...fromChain.slice(0, depth), name];
@@ -75,14 +75,14 @@ function resolveKey(
 
 function installedDependencies(
 	meta: LockEntry,
-	includePeerDependencies: boolean
+	includePeerDependencies: boolean,
 ): { name: string; optional: boolean }[] {
 	const dependencies = Object.keys(meta.dependencies ?? {}).map((name) => ({
 		name,
 		optional: false,
 	}));
 	dependencies.push(
-		...Object.keys(meta.optionalDependencies ?? {}).map((name) => ({ name, optional: true }))
+		...Object.keys(meta.optionalDependencies ?? {}).map((name) => ({ name, optional: true })),
 	);
 
 	if (includePeerDependencies) {
@@ -90,7 +90,7 @@ function installedDependencies(
 		dependencies.push(
 			...Object.keys(meta.peerDependencies ?? {})
 				.filter((name) => !optionalPeers.has(name))
-				.map((name) => ({ name, optional: false }))
+				.map((name) => ({ name, optional: false })),
 		);
 	}
 	return dependencies;
@@ -105,7 +105,7 @@ export interface LockfileClosureOptions {
 
 export async function collectLockfileClosure(
 	root: string,
-	options: LockfileClosureOptions
+	options: LockfileClosureOptions,
 ): Promise<{ packages: LockedPackage[]; unresolved: string[] }> {
 	const lock = parseLockfile(await readFile(join(root, 'bun.lock'), 'utf8'));
 	const queue: QueueEntry[] = [];
@@ -136,7 +136,7 @@ export async function collectLockfileClosure(
 		if (resolved === null) {
 			if (!item.optional) {
 				unresolved.add(
-					item.fromName ? `${item.name} (required by ${item.fromName})` : item.name
+					item.fromName ? `${item.name} (required by ${item.fromName})` : item.name,
 				);
 			}
 			continue;
@@ -151,7 +151,7 @@ export async function collectLockfileClosure(
 			// unresolved rather than dropping a package (and its subtree) from the closure.
 			if (!item.optional) {
 				unresolved.add(
-					item.fromName ? `${item.name} (required by ${item.fromName})` : item.name
+					item.fromName ? `${item.name} (required by ${item.fromName})` : item.name,
 				);
 			}
 			continue;
@@ -161,7 +161,7 @@ export async function collectLockfileClosure(
 
 		for (const dependency of installedDependencies(
 			entry.meta,
-			options.includePeerDependencies ?? false
+			options.includePeerDependencies ?? false,
 		)) {
 			queue.push({
 				fromChain: resolved.chain,
@@ -174,7 +174,7 @@ export async function collectLockfileClosure(
 
 	return {
 		packages: [...resolvedPackages.values()].sort(
-			(a, b) => byCodepoint(a.name, b.name) || byCodepoint(a.version, b.version)
+			(a, b) => byCodepoint(a.name, b.name) || byCodepoint(a.version, b.version),
 		),
 		unresolved: [...unresolved].sort(byCodepoint),
 	};

@@ -150,7 +150,7 @@ function canonical(identifier: string, policy: LicenseReviewPolicy): string {
 function collectUnreviewed(
 	expression: LicenseExpression,
 	policy: LicenseReviewPolicy,
-	result: Set<string>
+	result: Set<string>,
 ): void {
 	if (expression.kind === 'license') {
 		const identifier = canonical(expression.id, policy);
@@ -206,7 +206,7 @@ export function licenseIdentifiers(raw: string): string[] {
  */
 export function reviewLicenseExpression(
 	raw: string,
-	policy: LicenseReviewPolicy
+	policy: LicenseReviewPolicy,
 ): LicenseReviewResult {
 	const value = raw.trim();
 	if (value.length === 0 || UNKNOWN_LICENSE.test(value)) {

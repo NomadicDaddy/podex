@@ -39,7 +39,7 @@ function createArchive(stage, archive) {
 			'-Command',
 			`Compress-Archive -Path '${stage.replace(/'/g, "''")}/*' -DestinationPath '${archive.replace(/'/g, "''")}' -Force`,
 		],
-		{ encoding: 'utf8' }
+		{ encoding: 'utf8' },
 	);
 
 	if (result.error) {
@@ -74,7 +74,7 @@ async function main() {
 	createArchive(stage, archive);
 
 	console.log(
-		`Staged Podex ${packageManifest.version} at ${relative(root, stage)} and archived to ${relative(root, archive)}.`
+		`Staged Podex ${packageManifest.version} at ${relative(root, stage)} and archived to ${relative(root, archive)}.`,
 	);
 }
 

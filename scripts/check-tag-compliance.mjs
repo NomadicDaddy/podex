@@ -27,7 +27,7 @@ async function main() {
 
 	if (!asset.includes(REQUIRED_NOTICE)) {
 		throw new Error(
-			`Tag ${tag} distributes ${ASSET_PATH} without its MIT notice ("${REQUIRED_NOTICE}").`
+			`Tag ${tag} distributes ${ASSET_PATH} without its MIT notice ("${REQUIRED_NOTICE}").`,
 		);
 	}
 	console.log(`Tag ${tag} includes the required Mustache notice in ${ASSET_PATH}.`);
