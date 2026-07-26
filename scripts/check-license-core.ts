@@ -9,10 +9,10 @@
 import { cwd, exit } from 'node:process';
 
 import {
-	parseLicenseExpression,
-	reviewLicenseExpression,
 	type LicenseExpression,
 	type LicenseReviewPolicy,
+	parseLicenseExpression,
+	reviewLicenseExpression,
 } from './lib/license-core/expression.ts';
 import { collectInstalledPackages } from './lib/license-core/installed.ts';
 import { collectLockfileClosure, type RootDependencyField } from './lib/license-core/lockfile.ts';

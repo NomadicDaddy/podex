@@ -6,7 +6,7 @@
  * and must not be removed: the licence core is shared, and other adopters consume them. A dead-code
  * report naming an export in this file is not evidence that the export is unused.
  */
-import { readFile, readdir, realpath } from 'node:fs/promises';
+import { readdir, readFile, realpath } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { licenseOf, type PackageManifest } from './manifest.ts';
