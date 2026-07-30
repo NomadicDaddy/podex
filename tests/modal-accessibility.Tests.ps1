@@ -170,6 +170,12 @@ Describe 'Close control labeling' {
 		$closeButtons = ([regex]::Matches($crudmgrNew, 'data-close-modal')).Count
 		$closeButtons | Should -BeGreaterOrEqual 2
 	}
+
+	It 'accepts SVG descendants as delegated close-click targets' {
+		$controller = Get-FileContent 'src/crudmgr.js'
+		$controller | Should -Match 'if \(!\(target instanceof Element\)\) return'
+		$controller | Should -Not -Match 'if \(!\(target instanceof HTMLElement\)\) return'
+	}
 }
 
 Describe 'Tailwind 4 overlay class' {

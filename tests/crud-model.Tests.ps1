@@ -701,8 +701,9 @@ Describe 'Search and pagination template contract' {
 	}
 
 	It 'includes the search input in pagination button requests' {
-		# Each pagination button carries hx-include for the search + current page
-		$paginationIncludes = ([regex]::Matches($script:Crudmgr, 'hx-include="#simple-search, #current-page"')).Count
-		$paginationIncludes | Should -BeGreaterOrEqual 3
+		# The page already comes from each button's hx-get URL. Including the hidden
+		# current-page input would overwrite that destination with the active page.
+		$paginationIncludes = ([regex]::Matches($script:Crudmgr, 'hx-include="#simple-search"')).Count
+		$paginationIncludes | Should -Be 3
 	}
 }

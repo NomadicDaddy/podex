@@ -296,7 +296,7 @@
 		if (modal) {
 			modal.addEventListener('click', (event) => {
 				const target = event.target;
-				if (!(target instanceof HTMLElement)) return;
+				if (!(target instanceof Element)) return;
 				// Backdrop click: the click landed on the modal overlay itself, not
 				// its content child.
 				if (target === modal) {
