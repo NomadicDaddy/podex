@@ -6,7 +6,7 @@ This appendix contains the notices and license texts for third-party browser ass
 compiled into the Podex release. The release does not include `node_modules` or installed
 PowerShell modules.
 
-## htmx.org@4.0.0-beta5
+## htmx.org@4.0.0-beta6
 
 License: BSD-0-Clause
 

@@ -16,7 +16,7 @@ modules. The latter remain separate installations carrying their own license fil
 
 | Package | Version | License | How it ships |
 | --- | --- | --- | --- |
-| `htmx.org` | 4.0.0-beta5 | BSD-0-Clause | Copied into `public/js/htmx.js` |
+| `htmx.org` | 4.0.0-beta6 | BSD-0-Clause | Copied into `public/js/htmx.js` |
 | `mustache` | 4.2.0 | MIT | Copied into `public/js/mustache.js` |
 | `tailwindcss` | 4.3.3 | MIT | Compiled into `public/css/output.css` |
 
@@ -60,9 +60,9 @@ The npm packages themselves are not included in the release.
 | --- | --- | --- |
 | `@eslint/js` | 10.0.1 | MIT |
 | `@tailwindcss/cli` | 4.3.3 | MIT |
-| `eslint` | 10.7.0 | MIT |
-| `globals` | 17.7.0 | MIT |
-| `htmx.org` | 4.0.0-beta5 | BSD-0-Clause |
+| `eslint` | 10.8.0 | MIT |
+| `globals` | 17.8.0 | MIT |
+| `htmx.org` | 4.0.0-beta6 | BSD-0-Clause |
 | `mustache` | 4.2.0 | MIT |
 | `prettier` | 3.9.6 | MIT |
 | `prettier-plugin-tailwindcss` | 0.8.1 | MIT |
