@@ -4,8 +4,14 @@
 # failed step cannot mask another. Exits 1 if any gate fails and 0 only if all
 # pass.
 #
+# Pass -SkipTests for the fast variant (smoke:qc:fast): runs every gate except
+# the Pester test suite, which is the only slow gate (~70s). Useful for rapid
+# iteration between full test runs.
+#
 # Gates use Podex's existing scripts and binaries. Caching is omitted because
 # the gates complete in seconds.
+
+param([switch]$SkipTests)
 
 $ErrorActionPreference = 'Continue'
 Write-Output "Don't Panic."
@@ -22,6 +28,10 @@ $gates = @(
 	@{ Name = 'release'; Cmd = { bun run release } },
 	@{ Name = 'format:check'; Cmd = { bun run format:check } }
 )
+
+if ($SkipTests) {
+	$gates = @($gates | Where-Object { $_.Name -ne 'test' })
+}
 
 $failed = @()
 foreach ($gate in $gates) {
