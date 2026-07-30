@@ -78,6 +78,17 @@ BeforeAll {
 "@
 		Set-Content -LiteralPath $script:ConfigPath -Value $configText -Force
 
+		# Free the isolated port of any stale listener left by a previous test
+		# run so this run starts a fresh server rather than connecting to an
+		# orphaned one with stale state (e.g. an old version number).
+		if ($IsWindows) {
+			$stale = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
+			foreach ($c in $stale) {
+				Stop-Process -Id $c.OwningProcess -Force -ErrorAction SilentlyContinue
+			}
+			if ($stale) { Start-Sleep -Milliseconds 500 }
+		}
+
 		# Launch the real podex.ps1 as a detached background process with the
 		# repo root as CWD so relative paths resolve as in production.
 		$scriptPath = Join-Path $script:RepoRoot 'podex.ps1'
@@ -123,6 +134,20 @@ BeforeAll {
 		if ($null -ne $script:OriginalConfig) {
 			Set-Content -LiteralPath $script:ConfigPath -Value $script:OriginalConfig -NoNewline -Force
 			$script:OriginalConfig = $null
+		}
+		# Format the restored file with the project settings so it always
+		# matches the checked-in style regardless of how the restore produced
+		# it (the temp config above compresses hashtables; the formatter
+		# re-expands them to the canonical layout). Skipped silently when
+		# PSScriptAnalyzer is unavailable since the backup restore is enough.
+		if (Get-Module -ListAvailable -Name PSScriptAnalyzer -ErrorAction SilentlyContinue) {
+			Import-Module -Name PSScriptAnalyzer -ErrorAction Stop
+			$settingsPath = Join-Path $script:RepoRoot 'PSScriptAnalyzerSettings.psd1'
+			$raw = Get-Content -Raw -LiteralPath $script:ConfigPath
+			$formatted = Invoke-Formatter -ScriptDefinition $raw -Settings $settingsPath
+			if ($null -ne $formatted -and $raw -cne $formatted) {
+				Set-Content -LiteralPath $script:ConfigPath -Value $formatted -NoNewline -Force
+			}
 		}
 	}
 
