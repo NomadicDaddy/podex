@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-07-30
+
+### Added
+
+- `bun run smoke:qc:fast` runs every quality gate except the Pester test suite, for
+  quicker feedback during iteration between full test runs.
+
+### Changed
+
+- `bun run dev` now stops any existing server before starting, so a leftover process
+  can no longer hold the port and block startup.
+
+### Fixed
+
+- `bun run stop` now finds and stops the process owning the configured port even when
+  no PID file was recorded. Previously, a server started in the foreground via
+  `bun run dev` could not be stopped, leaving the port occupied and the next
+  `bun run dev` unable to bind.
+
 ## [0.5.0] - 2026-07-30
 
 ### Added
