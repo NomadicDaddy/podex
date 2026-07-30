@@ -232,4 +232,20 @@ Describe 'Lifecycle scripts are cross-platform' {
 		$content = Get-Content -Raw -LiteralPath (Join-Path $script:RepoRoot 'tools/stop.ps1')
 		$content | Should -Match 'podex\.pid'
 	}
+
+	It 'stop.ps1 falls back to the configured port when no PID is recorded' {
+		$content = Get-Content -Raw -LiteralPath (Join-Path $script:RepoRoot 'tools/stop.ps1')
+		$content | Should -Match 'Get-PodexPortOwnerPid'
+		# The fallback must run when neither the graceful path nor the
+		# recorded PID released the listener.
+		$content | Should -Match 'if \(-not \$stopped\)'
+	}
+
+	It 'stop.ps1 port lookup is cross-platform' {
+		$content = Get-Content -Raw -LiteralPath (Join-Path $script:RepoRoot 'tools/stop.ps1')
+		# Windows path resolves the listener via netstat, not a Windows-only
+		# cmdlet; Unix path uses lsof.
+		$content | Should -Match 'netstat'
+		$content | Should -Match 'lsof'
+	}
 }

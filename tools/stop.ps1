@@ -28,9 +28,9 @@ if (Test-Path -LiteralPath $pidFile) {
 }
 
 # Resolve the OS-native PID owning the configured listening port. Uses
-# external commands (netstat on Windows, lsof on Unix) rather than
-# Windows-only cmdlets like Get-NetTCPConnection so the same logic is
-# cross-platform. Returns $null when nothing is listening on the port.
+# external commands (netstat on Windows, lsof on Unix) rather than any
+# Windows-only network cmdlet so the same logic is cross-platform. Returns
+# $null when nothing is listening on the port.
 function Get-PodexPortOwnerPid {
 	param([Parameter(Mandatory)][int]$Port)
 	if ($IsWindows) {
