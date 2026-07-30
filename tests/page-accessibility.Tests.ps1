@@ -105,6 +105,13 @@ Describe 'Header logo dimensions and empty alt' {
 		$header | Should -Match 'height="1024"'
 	}
 
+	It 'constrains the logo to matching responsive width and height' {
+		$header = Get-FileContent 'views/partials/header.pode'
+		$header | Should -Match 'class="[^"]*\bsize-8\b[^"]*\bsm:size-10\b[^"]*"'
+		$header | Should -Match '\bshrink-0\b'
+		$header | Should -Match '\bobject-contain\b'
+	}
+
 	It 'uses empty alt because the adjacent span says Podex' {
 		$header = Get-FileContent 'views/partials/header.pode'
 		$header | Should -Match 'alt=""'
@@ -114,5 +121,26 @@ Describe 'Header logo dimensions and empty alt' {
 	It 'keeps the adjacent Podex span text' {
 		$header = Get-FileContent 'views/partials/header.pode'
 		$header | Should -Match '>Podex</span>'
+	}
+}
+
+Describe 'Header and footer surfaces' {
+	It 'keeps the brand and navigation together on the left' {
+		$header = Get-FileContent 'views/partials/header.pode'
+
+		$header | Should -Match '\bgap-x-8\b'
+		$header | Should -Not -Match '\bjustify-between\b'
+	}
+
+	It 'uses solid primary colors without gradients' {
+		$header = Get-FileContent 'views/partials/header.pode'
+		$footer = Get-FileContent 'views/partials/footer.pode'
+
+		foreach ($surface in @($header, $footer)) {
+			$surface | Should -Match '\bbg-primary-800\b'
+			$surface | Should -Match '\bdark:bg-primary-950\b'
+			$surface | Should -Not -Match '\bbg-linear-'
+			$surface | Should -Not -Match '\b(from|via|to)-'
+		}
 	}
 }

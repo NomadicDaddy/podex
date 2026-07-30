@@ -1,4 +1,4 @@
-<footer class="bg-linear-to-r from-blue-600 to-purple-600 shadow-md">
+<footer class="bg-primary-800 dark:bg-primary-950 shadow-md">
 	<div class="mx-auto w-full max-w-(--breakpoint-lg) px-4 py-4 text-center text-sm text-white/90">
 		<div>
 			Download the <span class="font-semibold text-white">htmx-debugger</span> extension for
