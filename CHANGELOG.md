@@ -7,95 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-07-30
+
 ### Added
 
-- PowerShell format consistency gate and Pode template compile regression
-  (`podex-powershell-and-template-quality-gates`). Added
-  `PSScriptAnalyzerSettings.psd1` (tab indentation, four-column tab display
-  width, OTBS braces, consistent whitespace, `PSUseCorrectCasing`) and
-  `tools/format-check.ps1`, which runs `Invoke-Formatter` with those settings
-  over the same recursive `.ps1`/`.psm1`/`.psd1` source set and exclusions as
-  `tools/analyze.ps1` and exits 1 when any file's formatted text differs from
-  its checked-in content. Added the `format:pwsh:check` package script and a
-  distinct `format:pwsh:check` gate to `tools/smoke-qc.ps1` (`bun run analyze`
-  remains a separate fail-closed gate). Added `tests/pode-templates.Tests.ps1`
-  which reads every `views/**/*.pode` and `errors/**/*.pode` file, applies
-  Pode 2.13's `ConvertFrom-PodeFile` escaping shape locally, and verifies
-  `[scriptblock]::Create` succeeds — including a TestDrive malformed-template
-  fixture that proves the shape rejects broken templates. Added
-  `tests/powershell-format.Tests.ps1` which proves the format checker passes for
-  the project source tree, exits 1 for a misformatted TestDrive fixture, and
-  exits 0 for a pre-formatted fixture.
+- Added PowerShell formatting and Pode template compilation gates. The analyzer, formatter, and
+  Pester runner now fail the build when they find a real problem instead of reporting success.
+
+### Changed
+
+- Podex now starts, stops, resolves routes, and locates its database from the application root
+  regardless of the caller's working directory. Debug lifecycle routes are loopback-only and use
+  explicit HTTP methods and headers.
+- A clean build installs the supported Pode and PSSQLite versions, creates the data directory, and
+  initializes a missing database. Initialization and clearing are repeatable and fail closed.
+- CRUD responses now use stable arrays, bounded inputs, consistent error envelopes, and UTC
+  timestamps. The page keeps search and pagination state across successful mutations.
+- The shared header and footer use solid theme colors. The logo keeps its aspect ratio, and the
+  brand and navigation remain grouped on the left.
 
 ### Fixed
 
-- Narrowed `tools/test.ps1` to discover `tests/*.Tests.ps1` containers (was
-  `tests/*.ps1`), so the glob is explicit and future-proof. Normalized
-  `server.psd1`, `tools/analyze.ps1`, and `tools/stop.ps1` to conform to the
-  project formatting settings (spaces to tabs, OTBS `} catch {`, pipeline
-  continuation indent). Removed the duplicate `Podex.Debug` /
-  `ShowExceptions` assertion-only case from
-  `tests/error-page-disclosure.Tests.ps1` while retaining one independent
-  assertion for each setting. Fixed the `server.psd1` config backup logic in
-  `tests/security-headers.Tests.ps1` and `tests/site-metadata.Tests.ps1` so
-  multi-Describe containers back up the checked-in config only once; previously
-  the second `Describe` overwrote the backup with a temp config, leaving
-  `server.psd1` polluted (wrong port and database path) after a test run. All
-  197 tests pass and `bun run smoke:qc` exits 0.
+- Search treats `%`, `_`, and `\` as literal characters, clamps out-of-range pages, and no longer
+  lets htmx 4 overwrite a pagination button's destination with the current page.
+- The add-item modal now keeps failed input visible, refreshes only after successful mutations, and
+  supports keyboard focus, Escape, backdrop clicks, and clicks on SVG descendants of close controls.
+- Home and CRUD page routes accept GET only. Page headings, repeated form controls, live update
+  regions, responsive images, and system dark mode now have the expected accessibility behavior.
+- Normal and error page titles are consistent, the OpenAPI version comes from `package.json`, and
+  error pages no longer expose request data, runtime versions, exception text, or stack traces.
 
-### Fixed
+### Security
 
-- Unified the error pages and site metadata into one consistent contract
-  (`podex-error-pages-and-site-metadata`). `podex.ps1` now passes unprefixed
-  page titles (`Home` and `CRUD Manager`) so `views/layouts/main.pode` renders
-  exactly `Podex - <title>` with no double-prefix (`Podex - Podex -`). The
-  OpenAPI version for `Add-PodeOAInfo -Version` is loaded once from
-  `package.json`, removing the stale `0.0.1` literal. The version-bearing
-  `<meta name="generator">` tag (which leaked `PSEdition`/`PSVersion` with an
-  obsolete `0.1.2` Podex literal) was removed from `main.pode`,
-  `errors/404.html.pode`, and `errors/default.html.pode`. Both error templates
-  now reference `/public/images/podex.ico` (dropping the missing
-  `favicon.svg`), follow the `Podex - <title>` convention, and no longer expose
-  raw `$data | ConvertTo-Json` dumps, render timestamps, exception messages, or
-  stack traces in client-visible markup. The error templates remain standalone
-  but enforce the same charset, viewport, favicon, safe generator policy, and
-  title convention through tests. 6 new static assertions were added to
-  `tests/error-page-disclosure.Tests.ps1` and 14 new live-server assertions were
-  added in the new `tests/site-metadata.Tests.ps1` (titles, favicon, no
-  double-prefix, package-derived OpenAPI version, no generator tag, no
-  PowerShell-version leak, and safe 404 markup including the 404 status code
-  and title). Source feature `feature-framework-server` (spec line 7) amended
-  to close the audit feedback loop.
-
-- Stabilized the CRUD API contract, validation, and item data presentation
-  (`podex-crud-contract-validation-and-data-presentation`). GET `/api/crud` now
-  always returns `rows` as a stable array (using `ArrayList` to survive
-  PowerShell's empty-array unwrapping), echoes the `search` parameter in the
-  envelope, and formats `created_at` and `updated_at` as UTC RFC 3339 strings
-  (`YYYY-MM-DDTHH:mm:ssZ`) via `strftime`. A `created_at_display` field
-  (`YYYY-MM-DD HH:mm UTC`) is included for human-readable views. POST now
-  returns `201` with `{ message, item }` containing the full created record
-  with RFC 3339 timestamps, instead of a bare success message. PUT and DELETE
-  now return `404 { message }` when `changes()` reports zero affected rows,
-  distinguishing missing records from validation failures; DELETE also returns
-  `400` for non-positive or non-numeric ids. Field-length validation (item
-  1–200, description 1–2000) is enforced in POST and PUT before database
-  access and mirrored as `maxlength` attributes in `crudmgr.pode` and
-  `crudmgr-new.pode`. The table column uses `created_at_display` for readable
-  timestamps. 22 new Pester test cases added covering empty/single row arrays,
-  POST identity with timestamp format assertions, missing-record 404s, 200/2000
-  boundary acceptance, over-limit 400 rejections, punctuation/Unicode round
-  trips, exact timestamp/display formats, and search-echo behavior.
-
-### Compliance
-
-- The v0.2.0 and v0.3.0 tags were withdrawn from the public repository and are no longer
-  downloadable. This supersedes the 0.4.0 note below, which recorded v0.2.0 as remaining available
-  as a historical artifact. v0.4.0 is now the only published release. Neither tag carried release
-  notes or a verified archive, and v0.2.0 additionally distributed `public/js/mustache.js` without
-  its MIT copyright notice, so withdrawal also ends that non-compliant distribution. The underlying
-  commits remain in history for anyone reconstructing the record: v0.2.0 pointed at `afcb6c0` and
-  v0.3.0 at `c98f417`.
+- Added content type, referrer, frame, and Content Security Policy headers to every route. HSTS is
+  enabled only for HTTPS, and first-party scripts work without inline JavaScript.
+- The withdrawn v0.2.0 and v0.3.0 releases are no longer downloadable. Their commits remain in Git
+  history, but neither old release had a verified archive and v0.2.0 omitted Mustache's MIT notice.
 
 ## [0.4.0] - 2026-07-22
 
