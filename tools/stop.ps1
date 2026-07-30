@@ -1,11 +1,13 @@
-# Stop the Podex server: graceful-first, then PID kill.
+# Stop the Podex server: graceful-first, then PID kill, then port fallback.
 #
 # Reads the configured endpoint from server.psd1, requests graceful shutdown
 # via POST /stop with the X-Podex-Debug: true header (registered when
 # Podex.Debug is on), waits for the recorded PID under data/podex.pid, and
 # force-stops only that PID if graceful shutdown does not release in time.
-# Uses no Windows-specific TCP cmdlets so the same script runs on Windows,
-# Linux, and macOS.
+# When no PID is recorded (e.g. the server was started in the foreground via
+# `bun run dev`, which writes no PID file), falls back to the OS-native
+# process owning the configured port. Uses no Windows-specific TCP cmdlets so
+# the same script runs on Windows, Linux, and macOS.
 
 $root = Split-Path $PSScriptRoot -Parent
 Set-Location -LiteralPath $root
@@ -23,6 +25,31 @@ $pidFile = Join-Path $root 'data/podex.pid'
 $recordedPid = $null
 if (Test-Path -LiteralPath $pidFile) {
 	$recordedPid = (Get-Content -LiteralPath $pidFile -Raw).Trim()
+}
+
+# Resolve the OS-native PID owning the configured listening port. Uses
+# external commands (netstat on Windows, lsof on Unix) rather than
+# Windows-only cmdlets like Get-NetTCPConnection so the same logic is
+# cross-platform. Returns $null when nothing is listening on the port.
+function Get-PodexPortOwnerPid {
+	param([Parameter(Mandatory)][int]$Port)
+	if ($IsWindows) {
+		foreach ($line in (netstat -ano 2>$null)) {
+			$cols = @($line -split '\s+' | Where-Object { $_ })
+			if ($cols.Count -ge 5 -and
+				$cols[1] -like "*:$Port" -and
+				$cols[3] -eq 'LISTENING' -and
+				$cols[4] -match '^\d+$' -and $cols[4] -ne '0') {
+				return [int]$cols[4]
+			}
+		}
+	} else {
+		$owner = (lsof -t -i ":$Port" -sTCP:LISTEN 2>$null | Select-Object -First 1)
+		if ($owner -and $owner -match '^\d+$') {
+			return [int]$owner
+		}
+	}
+	return $null
 }
 
 # 1. Graceful: ask Pode to close its own listener via POST /stop (registered
@@ -62,6 +89,21 @@ if ($recordedPid) {
 	}
 }
 
+# 3. Port fallback: if no PID was recorded (the server was started in the
+#    foreground via `bun run dev`, which writes no PID file) or the recorded
+#    PID could not be stopped, locate the process owning the configured port
+#    and stop it. This is the path that frees a port held by a foreground
+#    server so a subsequent `bun run dev` does not collide on the same port.
+if (-not $stopped) {
+	$portPid = Get-PodexPortOwnerPid -Port $port
+	if ($portPid) {
+		Stop-Process -Id $portPid -Force -ErrorAction SilentlyContinue
+		Start-Sleep -Milliseconds 500
+		$stillAlive = Get-Process -Id $portPid -ErrorAction SilentlyContinue
+		$stopped = -not $stillAlive
+	}
+}
+
 # Clean up the PID file regardless of outcome.
 if (Test-Path -LiteralPath $pidFile) {
 	Remove-Item -LiteralPath $pidFile -Force -ErrorAction SilentlyContinue
@@ -70,5 +112,12 @@ if (Test-Path -LiteralPath $pidFile) {
 if ($stopped -or $graceful) {
 	Write-Output 'Podex stopped.'
 } else {
-	Write-Output 'Podex not running (no recorded PID and no graceful endpoint).'
+	# Confirm nothing is still listening on the configured port so the
+	# message reflects reality rather than an assumption.
+	$owner = Get-PodexPortOwnerPid -Port $port
+	if ($owner) {
+		Write-Output "Podex could not be stopped (process $owner still owns port $port)."
+	} else {
+		Write-Output 'Podex not running (no recorded PID, no graceful endpoint, port is free).'
+	}
 }
