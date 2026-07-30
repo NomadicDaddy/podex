@@ -102,14 +102,13 @@ Start-PodeServer -Name 'Podex' -Threads 5 -ScriptBlock {
 	# static routes
 	Add-PodeStaticRoute -Path '/public' -Source './public'
 
-	# front-end routes. Pages only render views; nothing POSTs to them (the
-	# only form targets /api/crud), so they are registered GET-only to avoid
-	# exposing purposeless POST surface that hx-boost navigation never uses.
-	Add-PodeRoute -Path '/' -Method Get -ScriptBlock { Write-PodeViewResponse -Path 'layouts/main' -Data @{ PageName = 'Home'; Title = 'Home'; Components = @('about'); } }
-	Add-PodeRoute -Path '/crudmgr' -Method Get -ScriptBlock { Write-PodeViewResponse -Path 'layouts/main' -Data @{ PageName = 'CRUDMgr'; Title = 'CRUD Manager'; Components = @('crudmgr'); } }
-
-	# htmx routes (html only)
-	Add-PodeRoute -Path '/htmx/item-new' -Method Get -ScriptBlock { Write-PodeViewResponse -Path 'layouts/bare' -Data @{ Components = @('crudmgr-new'); } }
+	# File-discovered web routes. Each route file registers one immediately
+	# consumed page or HTML fragment; sorting keeps startup deterministic.
+	$webRouteDirectory = Join-Path $PSScriptRoot 'routes/web'
+	foreach ($routeFile in (Get-ChildItem -LiteralPath $webRouteDirectory -Filter '*.ps1' -File |
+				Sort-Object -Property Name)) {
+		. $routeFile.FullName
+	}
 
 	# file-based api routes (json or html)
 	# Debug-only routes (api/debug/*.ps1) register only when Podex.Debug is

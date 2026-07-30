@@ -2,7 +2,7 @@
 #
 # The Home (/) and CRUD Manager (/crudmgr) pages only render views; nothing
 # POSTs to them (the only form targets /api/crud) and hx-boost navigation uses
-# GET. These tests assert that podex.ps1 registers GET only for both pages,
+# GET. These tests assert that routes/web registers GET only for both pages,
 # never registers POST for either path, and that a running Podex instance
 # returns 200 for GET and 405 for POST on both page routes. The header template
 # must continue to use plain GET navigation (anchor hrefs under hx-boost).
@@ -149,9 +149,14 @@ AfterAll {
 	Clear-PodexRouteServer
 }
 
-Describe 'Page route registration is GET-only in podex.ps1' {
+Describe 'Page route registration is GET-only in routes/web' {
 	BeforeAll {
-		$script:PodexSource = Get-Content -Raw -LiteralPath $script:PodexPath
+		$script:PodexSource = (
+			Get-ChildItem -LiteralPath (Join-Path $script:RepoRoot 'routes/web') `
+				-Filter '*.ps1' `
+				-File |
+				ForEach-Object { Get-Content -Raw -LiteralPath $_.FullName }
+		) -join [Environment]::NewLine
 	}
 
 	It 'registers GET for the Home route' {
@@ -182,6 +187,13 @@ Describe 'Page route registration is GET-only in podex.ps1' {
 
 	It 'does not use the Get, Post compound method for any page route' {
 		$script:PodexSource | Should -Not -Match "-Method\s+Get,\s*Post"
+	}
+
+	It 'discovers every web route from the composition root' {
+		$compositionRoot = Get-Content -Raw -LiteralPath $script:PodexPath
+		$compositionRoot | Should -Match 'routes/web'
+		$compositionRoot | Should -Match 'Get-ChildItem'
+		$compositionRoot | Should -Match '\. \$routeFile\.FullName'
 	}
 }
 

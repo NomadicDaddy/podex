@@ -20,13 +20,15 @@ BeforeAll {
 }
 
 Describe 'Add-item route and component wiring' {
-	It 'registers GET /htmx/item-new in podex.ps1' {
-		$podex = Get-Content -LiteralPath (Join-Path $script:RepoRoot 'podex.ps1') -Raw
-		$podex | Should -Match "'/htmx/item-new'"
-		$podex | Should -Match "Components = @\('crudmgr-new'\)"
+	It 'registers GET /htmx/item-new through a discovered web route' {
+		$route = Get-Content -LiteralPath (
+			Join-Path $script:RepoRoot 'routes/web/item-new.ps1'
+		) -Raw
+		$route | Should -Match "'/htmx/item-new'"
+		$route | Should -Match "Components = @\('crudmgr-new'\)"
 		# Ensure mismatched route and component names are absent
-		$podex | Should -Not -Match "'/htmx/crudmgr-new'"
-		$podex | Should -Not -Match "Components = @\('crud-new'\)"
+		$route | Should -Not -Match "'/htmx/crudmgr-new'"
+		$route | Should -Not -Match "Components = @\('crud-new'\)"
 	}
 
 	It 'requests GET /htmx/item-new from the crudmgr add button' {
