@@ -212,6 +212,12 @@ Describe 'Lifecycle scripts are cross-platform' {
 		$content | Should -Match 'PodeCfg\.HttpPort'
 	}
 
+	It 'serve.ps1 builds generated browser assets before launching the server' {
+		$content = Get-Content -Raw -LiteralPath (Join-Path $script:RepoRoot 'tools/serve.ps1')
+		$content | Should -Match 'bun run assets:build[\s\S]*?\$LASTEXITCODE'
+		$content | Should -Match 'bun run assets:build[\s\S]*?\$scriptPath'
+	}
+
 	It 'stop.ps1 does not use Get-NetTCPConnection' {
 		$content = Get-Content -Raw -LiteralPath (Join-Path $script:RepoRoot 'tools/stop.ps1')
 		$content | Should -Not -Match 'Get-NetTCPConnection'

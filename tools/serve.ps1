@@ -17,6 +17,13 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 Set-Location -LiteralPath $root
 
+# Browser assets are generated and ignored, so every supported launch must
+# rebuild them before the server can answer requests.
+bun run assets:build
+if ($LASTEXITCODE -ne 0) {
+	throw "bun run assets:build failed with exit code $LASTEXITCODE"
+}
+
 # Read the configured endpoint from server.psd1 so serve.ps1 never hardcodes a
 # port and stays in sync with PodeCfg.
 $configPath = Join-Path $root 'server.psd1'
