@@ -7,6 +7,8 @@ description: Technical stack and working conventions for Podex
 
 Podex is a PowerShell 7.6 web application built on Pode, SQLite, htmx 4, and native CSS.
 It is not a Spernakit application and does not use the Spernakit backend or frontend layout.
+For a complete application that preserves these conventions, see
+[TodoMVC-Podex](https://github.com/NomadicDaddy/todomvc-podex).
 
 ## Layout
 

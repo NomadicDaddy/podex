@@ -11,6 +11,7 @@
 			<ul>
 				<li><a href="#introduction">Introduction</a></li>
 				<li><a href="#features">Features</a></li>
+				<li><a href="#example-application">Example Application</a></li>
 				<li><a href="#technical-stack">Technical Stack</a></li>
 				<li><a href="#setup">Setup</a></li>
 				<li><a href="#running-the-project">Running the Project</a></li>
@@ -27,6 +28,12 @@
 				<li>SQLite storage kept in the application <code>data/</code> directory</li>
 				<li>Built-in OpenAPI / Swagger docs and request logging</li>
 			</ul>
+			<h2 id="example-application">Example Application</h2>
+			<p>
+				<a href="https://github.com/NomadicDaddy/todomvc-podex">TodoMVC-Podex</a>
+				carries the starter into a complete TodoMVC implementation while preserving Podex's
+				application shell and operational conventions.
+			</p>
 			<h2 id="technical-stack">Technical Stack</h2>
 			<ul>
 				<li>

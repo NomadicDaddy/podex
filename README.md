@@ -5,6 +5,10 @@ Podex is a small starter for server-rendered web applications built with PowerSh
 serves complete Pode views, HTML fragments for htmx, and JSON responses for ordinary API
 clients.
 
+For a complete application built on the starter, see
+[TodoMVC-Podex](https://github.com/NomadicDaddy/todomvc-podex). It preserves Podex's application
+shell and operational conventions while replacing the reference CRUD surface with TodoMVC.
+
 It includes:
 
 - a SQLite-backed CRUD page with search, paging, create, edit, and delete actions;
