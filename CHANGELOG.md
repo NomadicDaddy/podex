@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-07-31
+
+### Fixed
+
+- Server launch commands now rebuild ignored browser assets before Pode starts, preventing clean
+  checkouts or post-validation cleanup from returning HTML error pages for required CSS and
+  JavaScript files.
+
 ## [0.7.0] - 2026-07-30
 
 ### Added
