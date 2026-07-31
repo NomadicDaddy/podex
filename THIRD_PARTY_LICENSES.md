@@ -17,37 +17,24 @@ modules. The latter remain separate installations carrying their own license fil
 | Package | Version | License | How it ships |
 | --- | --- | --- | --- |
 | `htmx.org` | 4.0.0-beta6 | BSD-0-Clause | Copied into `public/js/htmx.js` |
-| `mustache` | 4.2.0 | MIT | Copied into `public/js/mustache.js` |
-| `tailwindcss` | 4.3.3 | MIT | Compiled into `public/css/output.css` |
 
 The complete license text and copyright notices for these packages are reproduced in
-`THIRD_PARTY_NOTICES.md`, which must ship beside this file. The Mustache JavaScript and
-generated Tailwind stylesheet also carry embedded copies of their applicable notices so the
-notices remain attached when a browser receives either asset directly.
+`THIRD_PARTY_NOTICES.md`, which must ship beside this file.
 
-## Adapted htmx extension sources
-
-| Component | License | Local source | Upstream |
-| --- | --- | --- | --- |
-| htmx client-side-templates extension | 0BSD | `src/vendor/client-side-templates.js` | [source](https://github.com/bigskysoftware/htmx/tree/v1.9.12/src/ext) |
-| htmx json-enc extension | 0BSD | `src/vendor/json-enc.js` | [source](https://github.com/bigskysoftware/htmx/tree/v1.9.12/src/ext) |
-
-These files were adapted for htmx 4 from htmx's 0BSD-licensed extension implementations.
-Zero-Clause BSD permits copying and modification without an attribution condition; the
-provenance is retained here for clarity.
+No additional application-specific distribution notes.
 
 ## External PowerShell modules
 
 | Module | Expected range | License | Use | Upstream |
 | --- | --- | --- | --- | --- |
-| Pode | >=2.11.1 <3.0.0 | MIT | Runtime PowerShell module | [source](https://github.com/Badgerati/Pode) |
+| Pode | >=2.12.1 <3.0.0 | MIT | Runtime PowerShell module | [source](https://github.com/Badgerati/Pode) |
 | PSSQLite | >=1.1.0 <2.0.0 | MIT | Runtime PowerShell module | [source](https://github.com/RamblingCookieMonster/PSSQLite) |
-| Pester | >=5.6.1 <6.0.0 | Apache-2.0 | Development and test PowerShell module | [source](https://github.com/pester/Pester) |
+| Pester | >=6.0.0 <7.0.0 | Apache-2.0 | Development and test PowerShell module | [source](https://github.com/pester/Pester) |
 | PSScriptAnalyzer | >=1.23.0 <2.0.0 | MIT | Development and lint PowerShell module | [source](https://github.com/PowerShell/PSScriptAnalyzer) |
 
-Pode and PSSQLite are runtime prerequisites loaded from the user's PowerShell module path.
-PSSQLite installation is currently a documented manual prerequisite. Pester and
-PSScriptAnalyzer are development-only. Podex does not copy these modules into its release. If
+Pode and PSSQLite are runtime prerequisites loaded from the user's PowerShell module path and
+installed by the project build. Pester and PSScriptAnalyzer are development-only.
+Podex does not copy these modules into its release. If
 a future artifact bundles them, it must also carry each module's own license and, for Pode,
 its bundled third-party `licenses/` directory.
 
@@ -59,14 +46,18 @@ The npm packages themselves are not included in the release.
 | Package | Installed version | License |
 | --- | --- | --- |
 | `@eslint/js` | 10.0.1 | MIT |
-| `@tailwindcss/cli` | 4.3.3 | MIT |
+| `@types/bun` | 1.3.14 | MIT |
 | `eslint` | 10.8.0 | MIT |
+| `eslint-plugin-perfectionist` | 5.10.0 | MIT |
+| `eslint-plugin-unused-imports` | 4.4.1 | MIT |
 | `globals` | 17.8.0 | MIT |
 | `htmx.org` | 4.0.0-beta6 | BSD-0-Clause |
-| `mustache` | 4.2.0 | MIT |
+| `jiti` | 2.7.0 | MIT |
 | `prettier` | 3.9.6 | MIT |
-| `prettier-plugin-tailwindcss` | 0.8.1 | MIT |
-| `tailwindcss` | 4.3.3 | MIT |
+| `prettier-plugin-organize-attributes` | 1.0.0 | MIT |
+| `prettier-plugin-sort-json` | 4.2.0 | MIT |
+| `typescript` | 6.0.3 | Apache-2.0 |
+| `typescript-eslint` | 8.65.0 | MIT |
 
 ## Copyleft and weak-copyleft build components
 
@@ -76,11 +67,9 @@ The installed npm closure contains the following copyleft or weak-copyleft packa
 | --- | --- | --- |
 | `lightningcss` | 1.32.0 | MPL-2.0 |
 
-These packages are build tools or their dependencies and are excluded from the Podex release. In
-particular, Tailwind uses Lightning CSS under MPL-2.0 to transform CSS. The generated CSS does
-not contain Lightning CSS code, so MPL-2.0 does not apply to Podex or the generated stylesheet. A
-future artifact that bundles `node_modules` or Lightning CSS must be assessed separately and must
-carry the licenses and source notices required by those packages.
+These packages are build tools or their dependencies and are excluded from the
+Podex release. A future artifact that bundles `node_modules` must be assessed
+separately and must carry the licenses and source notices required by those packages.
 
 Platform-specific optional build packages are intentionally not serialized into this document
 because the installed set varies by host. They are still scanned by the policy check below and,

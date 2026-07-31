@@ -10,7 +10,8 @@ package-lock.json
 .vscode/
 data/
 dist/
-public/css/output.css
+public/css/
 public/js/
 api/crud/*.json
 AGENTS.md
+screenshots/

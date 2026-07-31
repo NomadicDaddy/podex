@@ -8,8 +8,8 @@ package-lock.json
 # build files
 **/.vscode
 dist/
-podex.db
-public/css/output.css
+data/
+public/css/
 public/js/**
 THIRD_PARTY_LICENSES.md
 THIRD_PARTY_NOTICES.md

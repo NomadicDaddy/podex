@@ -169,9 +169,9 @@ Describe 'Module import version floors' {
 		$content | Should -Match 'Import-Module.*PSSQLite.*MaximumVersion\s+1\.99\.99'
 	}
 
-	It 'podex.ps1 imports Pode with MinimumVersion 2.11.1' {
+	It 'podex.ps1 imports Pode with MinimumVersion 2.12.1' {
 		$content = Get-Content -Raw -LiteralPath (Join-Path $script:RepoRoot 'podex.ps1')
-		$content | Should -Match 'Import-Module.*Pode.*MinimumVersion\s+2\.11\.1'
+		$content | Should -Match 'Import-Module.*Pode.*MinimumVersion\s+2\.12\.1'
 	}
 
 	It 'podex.ps1 imports Pode with MaximumVersion 2.99.99' {
@@ -186,7 +186,7 @@ Describe 'Module import version floors' {
 
 	It 'build script installs Pode with the same floor' {
 		$content = Get-Content -Raw -LiteralPath (Join-Path $script:RepoRoot '.build.ps1')
-		$content | Should -Match 'Install-Module.*Pode.*MinimumVersion\s+2\.11\.1'
+		$content | Should -Match 'Install-Module.*Pode.*MinimumVersion\s+2\.12\.1'
 	}
 }
 
@@ -203,7 +203,7 @@ Describe 'Lifecycle scripts are cross-platform' {
 
 	It 'serve.ps1 records the PID under data/podex.pid' {
 		$content = Get-Content -Raw -LiteralPath (Join-Path $script:RepoRoot 'tools/serve.ps1')
-		$content | Should -Match 'podex\.pid'
+		$content | Should -Match 'Podex\.PidFile'
 	}
 
 	It 'serve.ps1 reads the configured endpoint from server.psd1' {

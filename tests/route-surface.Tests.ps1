@@ -70,9 +70,11 @@ BeforeAll {
 		HttpsEnabled = `$false
 	}
 	Podex = @{
+		AppName = 'Podex'
 		Debug = `$false
 		DatabaseType = 'SQLite'
 		DBFile = '$escapedDb'
+		PidFile = 'podex.pid'
 	}
 }
 "@
@@ -167,6 +169,10 @@ Describe 'Page route registration is GET-only in routes/web' {
 		$script:PodexSource | Should -Match "Add-PodeRoute\s+-Path\s+'/crudmgr'\s+-Method\s+Get\b"
 	}
 
+	It 'registers GET for the health route' {
+		$script:PodexSource | Should -Match "Add-PodeRoute\s+-Path\s+'/health'\s+-Method\s+Get\b"
+	}
+
 	It 'registers the Home route exactly once' {
 		$routeMatches = [regex]::Matches($script:PodexSource, "Add-PodeRoute\s+-Path\s+'/'\s+-Method")
 		$routeMatches.Count | Should -Be 1
@@ -234,6 +240,12 @@ Describe 'Running Podex instance serves page routes via GET only' -Tag 'Integrat
 		Skip-IfServerUnavailable
 		$response = Invoke-WebRequest -Uri "$($script:BaseUrl)/crudmgr" -UseBasicParsing -TimeoutSec 10
 		$response.StatusCode | Should -Be 200
+	}
+
+	It 'returns an OK response for GET /health' {
+		Skip-IfServerUnavailable
+		$response = Invoke-RestMethod -Uri "$($script:BaseUrl)/health" -TimeoutSec 10
+		$response.status | Should -Be 'ok'
 	}
 
 	It 'rejects POST / with 405 Method Not Allowed' {

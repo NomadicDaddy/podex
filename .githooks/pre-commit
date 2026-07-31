@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Canonical local quality gate for normal commits. The full smoke:qc, including
+# Pester, remains the final and hosted quality gate.
+set -euo pipefail
+
+echo "pre-commit: smoke:qc:fast"
+bun run smoke:qc:fast
+
+echo "pre-commit: passed"

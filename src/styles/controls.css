@@ -1,0 +1,127 @@
+.search-field {
+	position: relative;
+	width: min(100%, 30rem);
+}
+
+.search-field__icon {
+	position: absolute;
+	top: 50%;
+	left: 0.85rem;
+	width: 1.1rem;
+	height: 1.1rem;
+	color: var(--ink-soft);
+	transform: translateY(-50%);
+	pointer-events: none;
+}
+
+.form-field {
+	display: grid;
+	gap: 0.45rem;
+}
+
+.form-label {
+	color: var(--ink);
+	font-size: 0.87rem;
+	font-weight: 700;
+}
+
+.form-control {
+	width: 100%;
+	padding: 0.72rem 0.8rem;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius-sm);
+	background: var(--surface-raised);
+	color: var(--ink);
+	box-shadow: inset 0 1px 1px rgb(14 42 54 / 5%);
+}
+
+.form-control::placeholder {
+	color: var(--ink-soft);
+}
+
+.form-control:hover {
+	border-color: var(--brand);
+}
+
+.form-control:focus {
+	border-color: var(--focus);
+	outline: 3px solid color-mix(in srgb, var(--focus) 18%, transparent);
+}
+
+.form-control--search {
+	padding-left: 2.65rem;
+}
+
+textarea.form-control {
+	min-height: 8rem;
+	resize: vertical;
+}
+
+.button {
+	min-height: 2.45rem;
+	padding: 0.62rem 1rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	border: 1px solid transparent;
+	border-radius: var(--radius-sm);
+	font-size: 0.86rem;
+	font-weight: 750;
+	line-height: 1;
+	text-decoration: none;
+	transition:
+		background-color 140ms ease,
+		border-color 140ms ease,
+		color 140ms ease,
+		transform 140ms ease;
+}
+
+.button:hover {
+	transform: translateY(-1px);
+}
+
+.button--primary {
+	background: var(--brand);
+	color: #ffffff;
+	box-shadow: 0 6px 16px color-mix(in srgb, var(--brand) 24%, transparent);
+}
+
+.button--primary:hover {
+	background: var(--brand-strong);
+}
+
+.button--secondary {
+	border-color: var(--line-strong);
+	background: var(--surface);
+	color: var(--ink-muted);
+}
+
+.button--secondary:hover {
+	border-color: var(--brand);
+	color: var(--ink);
+}
+
+.button--warning {
+	background: var(--accent);
+	color: #392805;
+}
+
+.button--warning:hover {
+	background: var(--accent-strong);
+}
+
+.button--danger {
+	background: var(--danger);
+	color: #ffffff;
+}
+
+.button--danger:hover {
+	background: var(--danger-strong);
+}
+
+.button--small {
+	min-height: 2rem;
+	padding: 0.45rem 0.7rem;
+	font-size: 0.78rem;
+}

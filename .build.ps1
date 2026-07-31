@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.6
 $ErrorActionPreference = 'Stop'
 
 # Script root anchors every relative path so the build is correct regardless of
@@ -8,10 +8,10 @@ Set-Location -LiteralPath $root
 
 '# required powershell modules (CurrentUser so no elevation is required)'
 Install-Module -Name PSSQLite -Scope CurrentUser -MinimumVersion 1.1.0 -MaximumVersion 1.99.99 -Verbose # MIT
-Install-Module -Name Pode -Scope CurrentUser -MinimumVersion 2.11.1 -MaximumVersion 2.99.99 -Verbose # MIT
+Install-Module -Name Pode -Scope CurrentUser -MinimumVersion 2.12.1 -MaximumVersion 2.99.99 -Verbose # MIT
 
 '# development powershell modules'
-Install-Module -Name Pester -Scope CurrentUser -MinimumVersion 5.6.1 -MaximumVersion 5.99.99 -Verbose # Apache 2.0
+Install-Module -Name Pester -Scope CurrentUser -MinimumVersion 6.0.0 -MaximumVersion 6.99.99 -Verbose # Apache 2.0
 Install-Module -Name PSScriptAnalyzer -Scope CurrentUser -MinimumVersion 1.23.0 -MaximumVersion 1.99.99 -Verbose # MIT
 
 '# required bun packages'
@@ -35,10 +35,9 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 '# initialize database'
-# Resolve the configured database file beneath the script root's data/ directory,
-# create that directory when missing, and initialize a missing database from
-# api/debug/init.sql without prompting or requiring a pre-existing file. This
-# makes a clean checkout fully runnable after `bun run build`.
+# Resolve the configured database beneath the script root's data/ directory,
+# create that directory when missing, and initialize a missing database through
+# the application's database initializer.
 $config = Import-PowerShellDataFile -LiteralPath (Join-Path $root 'server.psd1')
 $configDbFile = [string]$config.Podex.DBFile
 $dbFile = if ([System.IO.Path]::IsPathRooted($configDbFile)) {

@@ -70,9 +70,11 @@ BeforeAll {
 		HttpsEnabled = `$false
 	}
 	Podex = @{
+		AppName = 'Podex'
 		Debug = `$false
 		DatabaseType = 'SQLite'
 		DBFile = '$escapedDb'
+		PidFile = 'podex.pid'
 	}
 }
 "@
@@ -135,20 +137,6 @@ BeforeAll {
 			Set-Content -LiteralPath $script:ConfigPath -Value $script:OriginalConfig -NoNewline -Force
 			$script:OriginalConfig = $null
 		}
-		# Format the restored file with the project settings so it always
-		# matches the checked-in style regardless of how the restore produced
-		# it (the temp config above compresses hashtables; the formatter
-		# re-expands them to the canonical layout). Skipped silently when
-		# PSScriptAnalyzer is unavailable since the backup restore is enough.
-		if (Get-Module -ListAvailable -Name PSScriptAnalyzer -ErrorAction SilentlyContinue) {
-			Import-Module -Name PSScriptAnalyzer -ErrorAction Stop
-			$settingsPath = Join-Path $script:RepoRoot 'PSScriptAnalyzerSettings.psd1'
-			$raw = Get-Content -Raw -LiteralPath $script:ConfigPath
-			$formatted = Invoke-Formatter -ScriptDefinition $raw -Settings $settingsPath
-			if ($null -ne $formatted -and $raw -cne $formatted) {
-				Set-Content -LiteralPath $script:ConfigPath -Value $formatted -NoNewline -Force
-			}
-		}
 	}
 
 	function Get-PageContent {
@@ -189,14 +177,14 @@ Describe 'Site metadata - rendered titles' -Tag 'SiteMetadata' {
 		}
 	}
 
-	It 'renders the Home page <title> as "Podex - Home"' {
+	It 'renders the Home page title as "Podex - Home"' {
 		Skip-IfServerUnavailable
 		$html = Get-PageContent '/'
 		$html | Should -Not -BeNullOrEmpty
 		$html | Should -Match '<title>\s*Podex - Home\s*</title>'
 	}
 
-	It 'renders the CRUD Manager page <title> as "Podex - CRUD Manager"' {
+	It 'renders the CRUD Manager page title as "Podex - CRUD Manager"' {
 		Skip-IfServerUnavailable
 		$html = Get-PageContent '/crudmgr'
 		$html | Should -Not -BeNullOrEmpty

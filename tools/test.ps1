@@ -1,6 +1,17 @@
+#Requires -Version 7.6
+
+[CmdletBinding()]
+param()
+
+Set-StrictMode -Version 3.0
 $ErrorActionPreference = 'Stop'
 
-Import-Module -Name 'Pester'
+Import-Module -Name Pester -MinimumVersion 6.0.0 -MaximumVersion 6.99.99 -ErrorAction Stop
+
+& bun run assets:build
+if ($LASTEXITCODE -ne 0) {
+	exit 1
+}
 
 # Snapshot server.psd1 before tests run. The site-metadata tests swap this
 # file for an isolated-port config and restore it in AfterAll; this snapshot

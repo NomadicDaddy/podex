@@ -1,13 +1,21 @@
+#Requires -Version 7.6
+
 # Stop the Podex server: graceful-first, then PID kill, then port fallback.
 #
 # Reads the configured endpoint from server.psd1, requests graceful shutdown
-# via POST /stop with the X-Podex-Debug: true header (registered when
-# Podex.Debug is on), waits for the recorded PID under data/podex.pid, and
+# via POST /stop with the X-Podex-Debug: true header when the application
+# exposes that endpoint, waits for the configured PID under data/, and
 # force-stops only that PID if graceful shutdown does not release in time.
 # When no PID is recorded (e.g. the server was started in the foreground via
 # `bun run dev`, which writes no PID file), falls back to the OS-native
 # process owning the configured port. Uses no Windows-specific TCP cmdlets so
 # the same script runs on Windows, Linux, and macOS.
+
+[CmdletBinding()]
+param()
+
+Set-StrictMode -Version 3.0
+$ErrorActionPreference = 'Stop'
 
 $root = Split-Path $PSScriptRoot -Parent
 Set-Location -LiteralPath $root
@@ -21,7 +29,7 @@ $https = [bool]$config.PodeCfg.HttpsEnabled
 $scheme = if ($https) { 'https' } else { 'http' }
 $endpointUrl = "${scheme}://${address}:${port}"
 
-$pidFile = Join-Path $root 'data/podex.pid'
+$pidFile = Join-Path $root "data/$($config.Podex.PidFile)"
 $recordedPid = $null
 if (Test-Path -LiteralPath $pidFile) {
 	$recordedPid = (Get-Content -LiteralPath $pidFile -Raw).Trim()
@@ -52,9 +60,8 @@ function Get-PodexPortOwnerPid {
 	return $null
 }
 
-# 1. Graceful: ask Pode to close its own listener via POST /stop (registered
-#    when Podex.Debug is on). The X-Podex-Debug header satisfies the debug
-#    middleware guard.
+# 1. Graceful: ask Pode to close its own listener via POST /stop when that
+#    route is available. The X-Podex-Debug header satisfies Podex's guard.
 $graceful = $false
 try {
 	$headers = @{ 'X-Podex-Debug' = 'true' }
@@ -110,14 +117,14 @@ if (Test-Path -LiteralPath $pidFile) {
 }
 
 if ($stopped -or $graceful) {
-	Write-Output 'Podex stopped.'
+	Write-Output "$($config.Podex.AppName) stopped."
 } else {
 	# Confirm nothing is still listening on the configured port so the
 	# message reflects reality rather than an assumption.
 	$owner = Get-PodexPortOwnerPid -Port $port
 	if ($owner) {
-		Write-Output "Podex could not be stopped (process $owner still owns port $port)."
+		Write-Output "$($config.Podex.AppName) could not be stopped (process $owner still owns port $port)."
 	} else {
-		Write-Output 'Podex not running (no recorded PID, no graceful endpoint, port is free).'
+		Write-Output "$($config.Podex.AppName) not running (no recorded PID, no graceful endpoint, port is free)."
 	}
 }

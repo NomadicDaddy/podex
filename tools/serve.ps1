@@ -1,12 +1,18 @@
-# Podex server launcher.
+#Requires -Version 7.6
+
+# Pode application server launcher.
 #   bun run dev    -> pwsh ./tools/serve.ps1             (foreground, blocking)
 #   bun run start  -> pwsh ./tools/serve.ps1 -Background (detached, non-blocking)
 #
 # Background start spawns podex.ps1 detached, records the spawned PID under
-# data/podex.pid, and polls the configured HTTP/HTTPS endpoint for readiness.
+# data/ using the configured filename, and polls the HTTP/HTTPS endpoint.
 # Uses only cross-platform PowerShell 7 APIs (no Windows-only TCP or window
 # cmdlets) so the same script works on Windows, Linux, and macOS.
+[CmdletBinding()]
 param([switch]$Background)
+
+Set-StrictMode -Version 3.0
+$ErrorActionPreference = 'Stop'
 
 $root = Split-Path $PSScriptRoot -Parent
 Set-Location -LiteralPath $root
@@ -42,7 +48,7 @@ if ($Background) {
 	if (-not (Test-Path -LiteralPath $dataDir)) {
 		New-Item -ItemType Directory -Path $dataDir -Force | Out-Null
 	}
-	$pidFile = Join-Path $dataDir 'podex.pid'
+	$pidFile = Join-Path $dataDir $config.Podex.PidFile
 	Set-Content -LiteralPath $pidFile -Value $process.Id -NoNewline -Force
 
 	# Poll the configured HTTP/HTTPS endpoint for readiness (up to ~30s). This
@@ -62,11 +68,11 @@ if ($Background) {
 	}
 
 	if ($ready) {
-		Write-Output "Podex running in background at $endpointUrl"
+		Write-Output "$($config.Podex.AppName) running in background at $endpointUrl"
 		Write-Output "Logs: $root/logs/  |  Stop: bun run stop"
 		exit 0
 	}
-	Write-Error "Podex did not answer $endpointUrl within 30s; check $root/logs/."
+	Write-Error "$($config.Podex.AppName) did not answer $endpointUrl within 30s; check $root/logs/."
 	exit 1
 }
 

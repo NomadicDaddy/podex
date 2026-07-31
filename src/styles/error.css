@@ -1,0 +1,54 @@
+.error-page {
+	--error-canvas: var(--canvas, #eef3f6);
+	--error-canvas-accent: var(--canvas-accent, #dcebef);
+	--error-ink: var(--ink, #102f3a);
+	--error-line: var(--line, #c6d6dc);
+	--error-link: var(--brand, #08768c);
+	--error-shadow: var(--shadow-md, 0 16px 40px rgb(17 43 56 / 12%));
+	--error-surface: var(--surface, #ffffff);
+	box-sizing: border-box;
+	min-height: 100vh;
+	padding: 2rem;
+	margin: 0;
+	display: grid;
+	place-items: center;
+	background:
+		radial-gradient(circle at top, var(--error-canvas-accent), transparent 36rem),
+		var(--error-canvas);
+	color: var(--error-ink);
+}
+
+.error-page * {
+	box-sizing: border-box;
+}
+
+.error-content {
+	width: min(34rem, 100%);
+	padding: 2.4rem;
+	border: 1px solid var(--error-line);
+	border-radius: 1.15rem;
+	background: var(--error-surface);
+	box-shadow: var(--error-shadow);
+	text-align: center;
+}
+
+.error-content h1 {
+	margin-top: 0;
+	font-family: var(--font-code, ui-monospace, 'Cascadia Code', Consolas, monospace);
+}
+
+.error-content a {
+	color: var(--error-link);
+}
+
+@media (prefers-color-scheme: dark) {
+	.error-page {
+		--error-canvas: var(--canvas, #06171d);
+		--error-canvas-accent: var(--canvas-accent, #12303a);
+		--error-ink: var(--ink, #e6f1f3);
+		--error-line: var(--line, #274752);
+		--error-link: var(--brand, #62c6d8);
+		--error-shadow: var(--shadow-md, 0 18px 42px rgb(0 0 0 / 28%));
+		--error-surface: var(--surface, #0c252e);
+	}
+}

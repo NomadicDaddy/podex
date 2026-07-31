@@ -1,4 +1,6 @@
-# Podex smoke:qc - aggregate quality gate.
+#Requires -Version 7.6
+
+# Aggregate application quality gate.
 #
 # Runs every order-independent gate and reports all failures at the end so one
 # failed step cannot mask another. Exits 1 if any gate fails and 0 only if all
@@ -8,9 +10,10 @@
 # the Pester test suite, which is the only slow gate (~70s). Useful for rapid
 # iteration between full test runs.
 #
-# Gates use Podex's existing scripts and binaries. Caching is omitted because
+# Gates use the repository's existing scripts and binaries. Caching is omitted because
 # the gates complete in seconds.
 
+[CmdletBinding()]
 param([switch]$SkipTests)
 
 $ErrorActionPreference = 'Continue'
@@ -18,10 +21,15 @@ Write-Output "Don't Panic."
 
 $root = Split-Path $PSScriptRoot -Parent
 Set-Location -LiteralPath $root
+$config = Import-PowerShellDataFile -LiteralPath (Join-Path $root 'server.psd1')
 
 $gates = @(
 	@{ Name = 'analyze'; Cmd = { bun run analyze } },
 	@{ Name = 'format:pwsh:check'; Cmd = { bun run format:pwsh:check } },
+	@{ Name = 'check:typescript-only'; Cmd = { bun run check:typescript-only } },
+	@{ Name = 'check-deps'; Cmd = { bun run check-deps } },
+	@{ Name = 'check:max-lines'; Cmd = { bun run check:max-lines } },
+	@{ Name = 'typecheck'; Cmd = { bun run typecheck } },
 	@{ Name = 'lint'; Cmd = { bun run lint } },
 	@{ Name = 'test'; Cmd = { bun run test } },
 	@{ Name = 'check:licenses'; Cmd = { bun run check:licenses } },
@@ -37,8 +45,11 @@ $failed = @()
 foreach ($gate in $gates) {
 	Write-Output ""
 	Write-Output "=== $($gate.Name) ==="
+	Set-Location -LiteralPath $root
 	& $gate.Cmd
-	if ($LASTEXITCODE -ne 0) {
+	$gateExitCode = $LASTEXITCODE
+	Set-Location -LiteralPath $root
+	if ($gateExitCode -ne 0) {
 		$failed += $gate.Name
 	}
 }
@@ -51,5 +62,5 @@ if ($failed.Count -gt 0) {
 	}
 	exit 1
 }
-Write-Output 'All podex smoke:qc gates passed.'
+Write-Output "All $($config.Podex.AppName) smoke:qc gates passed."
 exit 0

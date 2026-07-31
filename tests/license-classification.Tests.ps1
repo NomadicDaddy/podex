@@ -1,7 +1,7 @@
 BeforeAll {
 	$script:RepoRoot = (Resolve-Path "$PSScriptRoot/..").Path
-	$script:HarnessPath = Join-Path $PSScriptRoot 'license-classification-harness.mjs'
-	$script:GenerateScript = Join-Path $script:RepoRoot 'scripts/generate-third-party-licenses.mjs'
+	$script:HarnessPath = Join-Path $PSScriptRoot 'license-classification-harness.ts'
+	$script:GenerateScript = Join-Path $script:RepoRoot 'scripts/generate-third-party-licenses.ts'
 }
 
 Describe 'License inventory restrictive classification' {

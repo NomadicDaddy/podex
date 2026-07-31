@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.6
 
 [CmdletBinding()]
 param(
@@ -13,7 +13,7 @@ $ErrorActionPreference = 'Stop'
 try {
 	Import-Module -Name PSScriptAnalyzer -ErrorAction Stop
 	$resolvedPath = (Resolve-Path -LiteralPath $Path -ErrorAction Stop).Path
-	$excludedDirectoryPattern = '[\\/](?:\.git|dist|node_modules)[\\/]'
+	$excludedDirectoryPattern = '[\\/](?:\.git|data|dist|logs|node_modules|public)[\\/]'
 	$sourceFiles = @(
 		Get-ChildItem -LiteralPath $resolvedPath -Recurse -File -ErrorAction Stop |
 			Where-Object {

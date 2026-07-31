@@ -11,17 +11,19 @@
 		}
 		FileMonitor = @{
 			Enable = $false
-			Include = @("*.pode", "*.ps1")
+			Include = @('*.pode', '*.ps1', '*.psm1')
 			Exclude = @('podex.ps1')
 			ShowFiles = $true
 		}
 		Request = @{
-			Timeout = 600
+			Timeout = 60
+			BodySize = 1MB
 		}
 	}
 	Web = @{
 		ErrorPages = @{
 			ShowExceptions = $false
+			StrictContentTyping = $true
 		}
 		Static = @{
 			Cache = @{
@@ -36,8 +38,10 @@
 		HttpsEnabled = $false
 	}
 	Podex = @{
+		AppName = 'Podex'
 		Debug = $false
 		DatabaseType = 'SQLite'
 		DBFile = './data/podex.db'
+		PidFile = 'podex.pid'
 	}
 }

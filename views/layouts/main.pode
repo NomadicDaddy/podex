@@ -5,19 +5,16 @@
 		<meta name="description" content="Podex - PowerShell/Pode + htmx Framework for Building Web Applications" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Podex - $($data.Title ;)</title>
-		<link rel="stylesheet" type="text/css" href="/public/css/output.css" />
+		<link rel="stylesheet" type="text/css" href="/public/css/podex.css" />
 		<link rel="icon" type="image/x-icon" href="/public/images/podex.ico" />
-		<script src="/public/js/htmx.js"></script>
-		<script src="/public/js/client-side-templates.js"></script>
-		<script src="/public/js/json-enc.js"></script>
-		<script src="/public/js/mustache.js"></script>
-		<script src="/public/js/crudmgr.js"></script>
+		<script src="/public/js/htmx.js" defer></script>
+		<script src="/public/js/crudmgr.js" defer></script>
 	</head>
-	<body class="flex min-h-screen flex-col bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200" hx-boost="true">
-		<div>$(Use-PodePartialView -Path 'partials/header' -Data @{ PageName = $data.PageName } ;)</div>
-		<div class="grow overflow-auto">
-			<main class="mx-auto max-w-(--breakpoint-lg) p-6">$(foreach($component in $data.Components) { Use-PodePartialView -Path "components/$component" } ;)</main>
+	<body class="app-shell" hx-boost="true">
+		$(Use-PodePartialView -Path 'partials/header' -Data @{ PageName = $data.PageName } ;)
+		<div class="site-body">
+			<main class="site-main">$(foreach($component in $data.Components) { Use-PodePartialView -Path "components/$component" -Data $data } ;)</main>
 		</div>
-		<div>$(Use-PodePartialView -Path 'partials/footer' ;)</div>
+		$(Use-PodePartialView -Path 'partials/footer' ;)
 	</body>
 </html>

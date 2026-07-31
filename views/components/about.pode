@@ -1,79 +1,75 @@
-<section class="p-3 sm:p-5">
-	<div class="mx-auto max-w-(--breakpoint-xl)">
-		<div class="relative overflow-hidden bg-white shadow-md sm:rounded-lg dark:bg-gray-800">
-			<div class="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
-				<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Podex</h1>
-				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">PowerShell/Pode + htmx Framework for Building Web Applications</p>
-				<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">An opinionated full-stack starter powered by PowerShell on the backend and htmx on the frontend.</p>
-			</div>
-			<div class="podex-content">
-				<h2 id="table-of-contents">Table of Contents</h2>
-				<ul>
-					<li><a href="#introduction">Introduction</a></li>
-					<li><a href="#features">Features</a></li>
-					<li><a href="#technical-stack">Technical Stack</a></li>
-					<li><a href="#setup">Setup</a></li>
-					<li><a href="#running-the-project">Running the Project</a></li>
-					<li><a href="#contributing">Contributing</a></li>
-					<li><a href="#license">License</a></li>
-				</ul>
-				<h2 id="introduction">Introduction</h2>
-				<p>Podex is a framework for building full-stack web applications using PowerShell/Pode for the backend and htmx for the frontend.</p>
-				<h2 id="features">Features</h2>
-				<ul>
-					<li>File-based API routing that maps cleanly to HTTP verbs</li>
-					<li>htmx-driven request cycle with client-side Mustache templating</li>
-					<li>Tailwind CSS theming with light/dark support</li>
-					<li>SQLite storage kept in the application <code>data/</code> directory</li>
-					<li>Built-in OpenAPI / Swagger docs and request logging</li>
-				</ul>
-				<h2 id="technical-stack">Technical Stack</h2>
-				<ul>
-					<li>
-						<strong>Backend</strong>: <a href="https://github.com/PowerShell/PowerShell">PowerShell Core</a>, <a href="https://github.com/Badgerati/Pode">Pode</a>,
-						<a href="https://www.sqlite.org/index.html">SQLite</a>
-					</li>
-					<li>
-						<strong>Frontend</strong>: <a href="https://htmx.org/">htmx</a>, <a href="https://mustache.github.io/">Mustache</a>,
-						<a href="https://tailwindcss.com/">Tailwind CSS</a>
-					</li>
-				</ul>
-				<h2 id="setup">Setup</h2>
-				<ol>
-					<li>
-						Clone the repository:
-						<pre><code>git clone https://github.com/NomadicDaddy/podex.git
+<section class="page-section">
+	<div class="panel">
+		<header class="page-heading">
+			<p class="page-eyebrow">PowerShell / Pode / htmx</p>
+			<h1>Podex</h1>
+			<p class="page-lede">A practical full-stack starter for server-rendered web applications.</p>
+			<p class="page-note">PowerShell on the backend, htmx in the browser, and a small native CSS system throughout.</p>
+		</header>
+		<div class="podex-content">
+			<h2 id="table-of-contents">Table of Contents</h2>
+			<ul>
+				<li><a href="#introduction">Introduction</a></li>
+				<li><a href="#features">Features</a></li>
+				<li><a href="#technical-stack">Technical Stack</a></li>
+				<li><a href="#setup">Setup</a></li>
+				<li><a href="#running-the-project">Running the Project</a></li>
+				<li><a href="#contributing">Contributing</a></li>
+				<li><a href="#license">License</a></li>
+			</ul>
+			<h2 id="introduction">Introduction</h2>
+			<p>Podex is a framework for building full-stack web applications using PowerShell/Pode for the backend and htmx for the frontend.</p>
+			<h2 id="features">Features</h2>
+			<ul>
+				<li>File-based API routing that maps cleanly to HTTP verbs</li>
+				<li>htmx-driven request cycle with server-rendered Pode fragments</li>
+				<li>Native CSS theming with light/dark support</li>
+				<li>SQLite storage kept in the application <code>data/</code> directory</li>
+				<li>Built-in OpenAPI / Swagger docs and request logging</li>
+			</ul>
+			<h2 id="technical-stack">Technical Stack</h2>
+			<ul>
+				<li>
+					<strong>Backend</strong>: <a href="https://github.com/PowerShell/PowerShell">PowerShell Core</a>, <a href="https://github.com/Badgerati/Pode">Pode</a>,
+					<a href="https://www.sqlite.org/index.html">SQLite</a>
+				</li>
+				<li><strong>Frontend</strong>: <a href="https://htmx.org/">htmx</a>, native CSS</li>
+			</ul>
+			<h2 id="setup">Setup</h2>
+			<ol>
+				<li>
+					Clone the repository:
+					<pre><code>git clone https://github.com/NomadicDaddy/podex.git
 cd podex</code></pre>
-					</li>
-					<li>
-						Install dependencies:
-						<pre><code>bun install</code></pre>
-					</li>
-					<li>
-						Install PowerShell modules:
-						<pre><code>pwsh -File ./.build.ps1</code></pre>
-					</li>
-				</ol>
-				<h2 id="running-the-project">Running the Project</h2>
-				<ol>
-					<li>
-						Start the server:
-						<pre><code>bun run start</code></pre>
-					</li>
-					<li>Open your browser and navigate to <code>http://localhost:8433</code>.</li>
-				</ol>
-				<h2 id="contributing">Contributing</h2>
-				<ol>
-					<li>Fork the repository.</li>
-					<li>Create a new branch (<code>git checkout -b feature-branch</code>).</li>
-					<li>Make your changes.</li>
-					<li>Commit your changes (<code>git commit -am 'Add new feature'</code>).</li>
-					<li>Push to the branch (<code>git push origin feature-branch</code>).</li>
-					<li>Create a new Pull Request.</li>
-				</ol>
-				<h2 id="license">License</h2>
-				<p>This project is licensed under the MIT License.</p>
-			</div>
+				</li>
+				<li>
+					Install dependencies:
+					<pre><code>bun install</code></pre>
+				</li>
+				<li>
+					Install PowerShell modules:
+					<pre><code>pwsh -File ./.build.ps1</code></pre>
+				</li>
+			</ol>
+			<h2 id="running-the-project">Running the Project</h2>
+			<ol>
+				<li>
+					Start the server:
+					<pre><code>bun run start</code></pre>
+				</li>
+				<li>Open your browser and navigate to <code>http://localhost:8433</code>.</li>
+			</ol>
+			<h2 id="contributing">Contributing</h2>
+			<ol>
+				<li>Fork the repository.</li>
+				<li>Create a new branch (<code>git checkout -b feature-branch</code>).</li>
+				<li>Make your changes.</li>
+				<li>Commit your changes (<code>git commit -am 'Add new feature'</code>).</li>
+				<li>Push to the branch (<code>git push origin feature-branch</code>).</li>
+				<li>Create a new Pull Request.</li>
+			</ol>
+			<h2 id="license">License</h2>
+			<p>This project is licensed under the MIT License.</p>
 		</div>
 	</div>
 </section>

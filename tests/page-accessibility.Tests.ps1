@@ -32,18 +32,18 @@ Describe 'Document-level h1 headings' {
 }
 
 Describe 'Distinct accessible names for row inputs' {
-	It 'gives the item input an aria-label containing its purpose and {{id}}' {
-		$crudmgr = Get-FileContent 'views/components/crudmgr.pode'
-		$crudmgr | Should -Match 'aria-label="Item name \{\{id\}\}"'
+	It 'gives each item input an aria-label containing its purpose and server-rendered id' {
+		$crudmgr = Get-FileContent 'views/components/crud-list.pode'
+		$crudmgr | Should -Match 'aria-label="Item name \$\(\$item\.Id\)"'
 	}
 
-	It 'gives the description input an aria-label containing its purpose and {{id}}' {
-		$crudmgr = Get-FileContent 'views/components/crudmgr.pode'
-		$crudmgr | Should -Match 'aria-label="Description \{\{id\}\}"'
+	It 'gives each description input an aria-label containing its purpose and server-rendered id' {
+		$crudmgr = Get-FileContent 'views/components/crud-list.pode'
+		$crudmgr | Should -Match 'aria-label="Description \$\(\$item\.Id\)"'
 	}
 
 	It 'uses different label text for item vs description inputs' {
-		$crudmgr = Get-FileContent 'views/components/crudmgr.pode'
+		$crudmgr = Get-FileContent 'views/components/crud-list.pode'
 		$crudmgr | Should -Match 'aria-label="Item name'
 		$crudmgr | Should -Match 'aria-label="Description'
 	}
@@ -63,8 +63,8 @@ Describe 'Live region and busy state for htmx updates' {
 		$loadingBlock.Value | Should -Match 'aria-hidden="true"'
 	}
 
-	It 'toggles aria-busy from src/crudmgr.js during htmx:before:request and htmx:after:request' {
-		$controller = Get-FileContent 'src/crudmgr.js'
+	It 'toggles aria-busy from src/crudmgr.ts during htmx:before:request and htmx:after:request' {
+		$controller = Get-FileContent 'src/crudmgr.ts'
 		$controller | Should -Match "htmx:before:request"
 		$controller | Should -Match "htmx:after:request"
 		$controller | Should -Match "aria-busy"
@@ -77,23 +77,23 @@ Describe 'Live region and busy state for htmx updates' {
 
 Describe 'Prefers-color-scheme dark theme behavior' {
 	It 'removes the class-only @custom-variant dark override' {
-		$css = Get-FileContent 'public/css/tailwind.css'
+		$css = Get-FileContent 'src/styles/foundation.css'
 		$css | Should -Not -Match '@custom-variant dark'
 	}
 
 	It 'relies on prefers-color-scheme for dark overrides' {
-		$css = Get-FileContent 'public/css/tailwind.css'
+		$css = Get-FileContent 'src/styles/foundation.css'
 		$css | Should -Match 'prefers-color-scheme:\s*dark'
 	}
 
-	It 'does not add a JavaScript theme toggle' {
-		$controller = Get-FileContent 'src/crudmgr.js'
+	It 'does not add a client-side theme toggle' {
+		$controller = Get-FileContent 'src/crudmgr.ts'
 		$controller | Should -Not -Match 'theme'
 		$controller | Should -Not -Match 'toggleDark'
 	}
 
 	It 'sets color-scheme: light dark on :root' {
-		$css = Get-FileContent 'public/css/tailwind.css'
+		$css = Get-FileContent 'src/styles/foundation.css'
 		$css | Should -Match 'color-scheme:\s*light dark'
 	}
 }
@@ -107,9 +107,10 @@ Describe 'Header logo dimensions and empty alt' {
 
 	It 'constrains the logo to matching responsive width and height' {
 		$header = Get-FileContent 'views/partials/header.pode'
-		$header | Should -Match 'class="[^"]*\bsize-8\b[^"]*\bsm:size-10\b[^"]*"'
-		$header | Should -Match '\bshrink-0\b'
-		$header | Should -Match '\bobject-contain\b'
+		$shellStyles = Get-FileContent 'src/styles/shell.css'
+
+		$header | Should -Match 'class="brand__mark"'
+		$shellStyles | Should -Match '(?s)\.brand__mark\s*\{[^}]*width:[^}]*height:'
 	}
 
 	It 'uses empty alt because the adjacent span says Podex' {
@@ -128,19 +129,17 @@ Describe 'Header and footer surfaces' {
 	It 'keeps the brand and navigation together on the left' {
 		$header = Get-FileContent 'views/partials/header.pode'
 
-		$header | Should -Match '\bgap-x-8\b'
-		$header | Should -Not -Match '\bjustify-between\b'
+		$header | Should -Match 'class="site-nav"'
+		$header | Should -Match '(?s)class="brand".*class="site-nav__links"'
 	}
 
-	It 'uses solid primary colors without gradients' {
+	It 'uses shared semantic shell classes and exposes the active page' {
 		$header = Get-FileContent 'views/partials/header.pode'
 		$footer = Get-FileContent 'views/partials/footer.pode'
 
-		foreach ($surface in @($header, $footer)) {
-			$surface | Should -Match '\bbg-primary-800\b'
-			$surface | Should -Match '\bdark:bg-primary-950\b'
-			$surface | Should -Not -Match '\bbg-linear-'
-			$surface | Should -Not -Match '\b(from|via|to)-'
-		}
+		$header | Should -Match 'class="site-header"'
+		$header | Should -Match 'site-nav__link--active'
+		$header | Should -Match 'aria-current="page"'
+		$footer | Should -Match 'class="site-footer"'
 	}
 }

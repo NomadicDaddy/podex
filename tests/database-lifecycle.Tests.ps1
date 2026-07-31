@@ -215,8 +215,8 @@ Describe 'Fresh-checkout build database bootstrap' {
 		$script:BuildContent = Get-Content -Raw -LiteralPath (Join-Path $script:RepoRoot '.build.ps1')
 	}
 
-	It 'declares #Requires -Version 7.0' {
-		$script:BuildContent | Should -Match '#Requires\s+-Version\s+7\.0'
+	It 'declares #Requires -Version 7.6' {
+		$script:BuildContent | Should -Match '#Requires\s+-Version\s+7\.6'
 	}
 
 	It 'sets $ErrorActionPreference to Stop' {
@@ -228,7 +228,7 @@ Describe 'Fresh-checkout build database bootstrap' {
 	}
 
 	It 'installs Pode with the supported version floor' {
-		$script:BuildContent | Should -Match 'Install-Module.*Pode.*MinimumVersion\s+2\.11\.1.*MaximumVersion\s+2\.99\.99'
+		$script:BuildContent | Should -Match 'Install-Module.*Pode.*MinimumVersion\s+2\.12\.1.*MaximumVersion\s+2\.99\.99'
 	}
 
 	It 'installs modules before invoking either module' {

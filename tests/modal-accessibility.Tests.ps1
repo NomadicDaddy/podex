@@ -35,11 +35,11 @@ Describe 'Modal wrapper consolidation' {
 }
 
 Describe 'External controller loading' {
-	It 'adds src/crudmgr.js and ships it via build-assets.mjs' {
-		Test-Path -LiteralPath (Join-Path $script:RepoRoot 'src/crudmgr.js') | Should -Be $true
+	It 'compiles src/crudmgr.ts through build-assets.ts' {
+		Test-Path -LiteralPath (Join-Path $script:RepoRoot 'src/crudmgr.ts') | Should -Be $true
 
-		$buildAssets = Get-FileContent 'scripts/build-assets.mjs'
-		$buildAssets | Should -Match "src/crudmgr\.js.*public/js/crudmgr\.js"
+		$buildAssets = Get-FileContent 'scripts/build-assets.ts'
+		$buildAssets | Should -Match "src/crudmgr\.ts.*public/js/crudmgr\.js"
 	}
 
 	It 'loads the controller script from views/layouts/main.pode' {
@@ -66,51 +66,40 @@ Describe 'External controller loading' {
 }
 
 Describe 'Mutation success/failure event guards' {
-	It 'listens for htmx:after:request scoped to #crud in the controller' {
-		$controller = Get-FileContent 'src/crudmgr.js'
+	It 'listens for htmx:after:request on CRUD pages' {
+		$controller = Get-FileContent 'src/crudmgr.ts'
 		$controller | Should -Match "htmx:after:request"
 		# The controller initializes only when #crud exists (page scope guard)
 		$controller | Should -Match "getElementById\('crud'\)"
-		# The listener is on document.body so events from both the modal form and
-		# the inline table controls can reach it.
 		$controller | Should -Match "document.body.addEventListener\('htmx:after:request'"
 	}
 
-	It 'guards close/reset/dispatch behind a success check' {
-		$controller = Get-FileContent 'src/crudmgr.js'
-		# Success path closes the modal and dispatches itemChanged
+	It 'closes the modal only after a successful create' {
+		$controller = Get-FileContent 'src/crudmgr.ts'
 		$controller | Should -Match 'closeModal'
-		$controller | Should -Match 'dispatchItemChanged'
-		# The success predicate must exist
-		$controller | Should -Match 'isSuccessfulMutation'
-		# A 2xx status range check
+		$controller | Should -Match 'isSuccessfulCreate'
+		$controller | Should -Match "method\.toUpperCase\(\) === 'POST'"
 		$controller | Should -Match 'status >= 200'
 		$controller | Should -Match 'status < 300'
+		$controller | Should -Not -Match 'dispatchItemChanged'
 	}
 
 	It 'removes inline hx-on::after:request triggers from Update/Delete buttons' {
-		$crudmgr = Get-FileContent 'views/components/crudmgr.pode'
+		$crudmgr = Get-FileContent 'views/components/crud-list.pode'
 		$crudmgr | Should -Not -Match "hx-on::after:request"
 	}
 }
 
 Describe 'Failed POST error retention' {
-	It 'renders the response message into #itemModalError role=alert' {
+	It 'routes renderable 4xx and 5xx fragments into #itemModalError' {
 		$crudmgrNew = Get-RenderedComponent -ComponentName 'crudmgr-new'
+		$crudStyles = Get-FileContent 'src/styles/crud.css'
 		$crudmgrNew | Should -Match 'id="itemModalError"'
 		$crudmgrNew | Should -Match 'role="alert"'
-	}
-
-	It 'extracts { message } from the response body in the controller' {
-		$controller = Get-FileContent 'src/crudmgr.js'
-		$controller | Should -Match 'function extractMessage'
-		$controller | Should -Match "\.message"
-	}
-
-	It 'keeps the modal open and calls showError on a failed POST' {
-		$controller = Get-FileContent 'src/crudmgr.js'
-		$controller | Should -Match 'function showError'
-		$controller | Should -Match 'Keep the modal open'
+		$crudmgrNew | Should -Match 'hx-status:4xx="target:#itemModalError swap:innerHTML"'
+		$crudmgrNew | Should -Match 'hx-status:5xx="target:#itemModalError swap:innerHTML"'
+		$crudmgrNew | Should -Match 'class="alert"'
+		$crudStyles | Should -Match '\.alert:empty'
 	}
 }
 
@@ -128,26 +117,26 @@ Describe 'Dialog accessibility attributes' {
 	}
 
 	It 'implements initial focus on the item name field' {
-		$controller = Get-FileContent 'src/crudmgr.js'
+		$controller = Get-FileContent 'src/crudmgr.ts'
 		$controller | Should -Match 'input\[name="item"\]'
 		$controller | Should -Match '\.focus\(\)'
 	}
 
 	It 'implements a Tab/Shift+Tab focus loop' {
-		$controller = Get-FileContent 'src/crudmgr.js'
+		$controller = Get-FileContent 'src/crudmgr.ts'
 		$controller | Should -Match 'function trapFocus'
 		$controller | Should -Match "event.key !== 'Tab'"
 		$controller | Should -Match 'event.shiftKey'
 	}
 
 	It 'implements Escape and backdrop close' {
-		$controller = Get-FileContent 'src/crudmgr.js'
+		$controller = Get-FileContent 'src/crudmgr.ts'
 		$controller | Should -Match "event.key === 'Escape'"
 		$controller | Should -Match 'target === modal'
 	}
 
 	It 'returns focus to the Add Item button on close' {
-		$controller = Get-FileContent 'src/crudmgr.js'
+		$controller = Get-FileContent 'src/crudmgr.ts'
 		$controller | Should -Match 'lastFocused'
 		$controller | Should -Match 'lastFocused.focus'
 	}
@@ -172,16 +161,20 @@ Describe 'Close control labeling' {
 	}
 
 	It 'accepts SVG descendants as delegated close-click targets' {
-		$controller = Get-FileContent 'src/crudmgr.js'
+		$controller = Get-FileContent 'src/crudmgr.ts'
 		$controller | Should -Match 'if \(!\(target instanceof Element\)\) return'
 		$controller | Should -Not -Match 'if \(!\(target instanceof HTMLElement\)\) return'
 	}
 }
 
-Describe 'Tailwind 4 overlay class' {
-	It 'uses bg-black/50 instead of bg-opacity-50 on the modal overlay' {
+Describe 'Native CSS modal state' {
+	It 'uses aria-hidden as the single modal visibility contract' {
 		$crudmgr = Get-FileContent 'views/components/crudmgr.pode'
-		$crudmgr | Should -Match 'bg-black/50'
-		$crudmgr | Should -Not -Match 'bg-opacity-50'
+		$controller = Get-FileContent 'src/crudmgr.ts'
+		$modalStyles = Get-FileContent 'src/styles/modal.css'
+
+		$crudmgr | Should -Match 'class="modal-backdrop"'
+		$controller | Should -Not -Match "classList\.(add|remove)\('(hidden|flex)'\)"
+		$modalStyles | Should -Match "\.modal-backdrop\[aria-hidden='true'\]"
 	}
 }

@@ -1,9 +1,9 @@
-#Requires -Version 7.0
+#Requires -Version 7.6
 # PowerShell format consistency gate.
 #
 # Runs PSScriptAnalyzer's Invoke-Formatter with the project formatting settings
 # (PSScriptAnalyzerSettings.psd1) over the same recursive .ps1/.psm1/.psd1 source
-# set that tools/analyze.ps1 covers, excluding .git, dist, and node_modules.
+# set that tools/analyze.ps1 covers, excluding generated and runtime directories.
 # Exits 1 when any file's formatted text differs from its current content.
 
 [CmdletBinding()]
@@ -24,7 +24,7 @@ try {
 		exit 1
 	}
 	$resolvedPath = (Resolve-Path -LiteralPath $Path -ErrorAction Stop).Path
-	$excludedDirectoryPattern = '[\\/](?:\.git|dist|node_modules)[\\/]'
+	$excludedDirectoryPattern = '[\\/](?:\.git|data|dist|logs|node_modules|public)[\\/]'
 	$sourceFiles = @(
 		Get-ChildItem -LiteralPath $resolvedPath -Recurse -File -ErrorAction Stop |
 			Where-Object {

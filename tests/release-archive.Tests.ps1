@@ -3,7 +3,8 @@ BeforeAll {
 
 	$script:PackageManifest = Get-Content -Raw -LiteralPath (Join-Path $script:RepoRoot 'package.json') | ConvertFrom-Json
 	$script:Version = $script:PackageManifest.version
-	$script:ArchivePath = Join-Path $script:RepoRoot "dist/podex-$($script:Version).zip"
+	$script:ArtifactName = "$($script:PackageManifest.name)-$($script:Version)"
+	$script:ArchivePath = Join-Path $script:RepoRoot "dist/$($script:ArtifactName).zip"
 }
 
 Describe 'Release archive artifact' {
@@ -22,7 +23,7 @@ Describe 'Release archive artifact' {
 		# The dist/ directory is git-ignored so this is belt-and-suspenders.
 	}
 
-	It 'produces dist/podex-<version>.zip after release:package' {
+	It 'produces the versioned package archive after release:package' {
 		$script:ArchivePath | Should -Exist
 	}
 
@@ -33,6 +34,17 @@ Describe 'Release archive artifact' {
 			$LASTEXITCODE | Should -Be 0
 		} finally {
 			Pop-Location
+		}
+	}
+
+	It 'includes every file-discovered web route' {
+		$stagingRoot = Join-Path $script:RepoRoot "dist/$($script:ArtifactName)"
+		$sourceRoutes = Get-ChildItem -LiteralPath (Join-Path $script:RepoRoot 'routes/web') `
+			-Filter '*.ps1' `
+			-File
+
+		foreach ($route in $sourceRoutes) {
+			Join-Path $stagingRoot "routes/web/$($route.Name)" | Should -Exist
 		}
 	}
 

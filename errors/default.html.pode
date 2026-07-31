@@ -4,22 +4,14 @@
 		<meta charset="UTF-8" />
 		<meta name="description" content="$($data.status.code ;) Error" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Podex - $($data.status.code ;) Error</title>
-		<link rel="stylesheet" type="text/css" href="/public/css/output.css" />
+		<title>$((Get-PodeConfig).Podex.AppName ;) - $($data.status.code ;) Error</title>
+		<link rel="stylesheet" type="text/css" href="/public/css/podex.css" />
 		<link rel="icon" type="image/x-icon" href="/public/images/podex.ico" />
-		<script src="/public/js/htmx.js"></script>
-		<script src="/public/js/client-side-templates.js"></script>
-		<script src="/public/js/json-enc.js"></script>
-		<script src="/public/js/mustache.js"></script>
 	</head>
-	<body class="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200" hx-boost="true">
-		$(Use-PodePartialView -Path 'partials/header' -Data @{ PageName = '$($data.status.code ;) Error' } ;)
-
-		<main class="container mx-auto max-w-(--breakpoint-xl) p-2 lg:px-3 lg:py-4">
+	<body class="error-page">
+		<main class="error-content">
 			<h1>$($data.status.code ;) Error</h1>
 			<p>An unexpected error occurred. Please try again later.</p>
 		</main>
-
-		$(Use-PodePartialView -Path 'partials/footer' ;)
 	</body>
 </html>

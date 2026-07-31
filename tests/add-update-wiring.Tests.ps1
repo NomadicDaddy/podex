@@ -32,9 +32,11 @@ Describe 'Add-item route and component wiring' {
 	}
 
 	It 'requests GET /htmx/item-new from the crudmgr add button' {
-		$crudmgr = Get-Content -LiteralPath (Join-Path $script:RepoRoot 'views/components/crudmgr.pode') -Raw
-		$crudmgr | Should -Match 'hx-get="/htmx/item-new"'
-		$crudmgr | Should -Match 'hx-target="#itemModalContent"'
+		$crudList = Get-Content -LiteralPath (
+			Join-Path $script:RepoRoot 'views/components/crud-list.pode'
+		) -Raw
+		$crudList | Should -Match 'hx-get="/htmx/item-new"'
+		$crudList | Should -Match 'hx-target="#itemModalContent"'
 	}
 
 	It 'renders the crudmgr-new component containing item and description controls' {
@@ -57,6 +59,8 @@ Describe 'Add form POST field contract' {
 		$crudmgrNew | Should -Match 'name="item"'
 		$crudmgrNew | Should -Match 'name="description"'
 		$crudmgrNew | Should -Match 'hx-post="/api/crud"'
+		$crudmgrNew | Should -Match 'hx-target="#crud"'
+		$crudmgrNew | Should -Match 'hx-swap="outerMorph"'
 
 		# And the handler accepts exactly those fields
 		$postHandler = Get-Content -LiteralPath (Join-Path $script:RepoRoot 'api/crud/post.ps1') -Raw
@@ -67,14 +71,16 @@ Describe 'Add form POST field contract' {
 
 Describe 'Update row PUT field contract' {
 	It 'submits id, item, and description to PUT /api/crud' {
-		$crudmgr = Get-Content -LiteralPath (Join-Path $script:RepoRoot 'views/components/crudmgr.pode') -Raw
+		$crudmgr = Get-Content -LiteralPath (
+			Join-Path $script:RepoRoot 'views/components/crud-list.pode'
+		) -Raw
 		# Each row carries hidden inputs for id, item, description
 		$crudmgr | Should -Match 'name="id"'
 		$crudmgr | Should -Match 'name="item"'
 		$crudmgr | Should -Match 'name="description"'
 		# The update button PUTs the whole row
 		$crudmgr | Should -Match 'hx-put="/api/crud"'
-		$crudmgr | Should -Match 'hx-include="closest tr"'
+		$crudmgr | Should -Match 'hx-include="closest tr, #simple-search, #current-page"'
 
 		# And the handler accepts id + item + description
 		$putHandler = Get-Content -LiteralPath (Join-Path $script:RepoRoot 'api/crud/put.ps1') -Raw
@@ -84,12 +90,15 @@ Describe 'Update row PUT field contract' {
 	}
 }
 
-Describe 'Controller-scoped mutation refresh' {
-	It 'removes inline hx-on mutation handlers from the table buttons' {
-		$crudmgr = Get-Content -LiteralPath (Join-Path $script:RepoRoot 'views/components/crudmgr.pode') -Raw
-		# The inline after:request triggers that fired itemChanged unconditionally
-		# are removed; the external controller now owns the refresh lifecycle.
-		$crudmgr | Should -Not -Match 'hx-on::after:request'
+Describe 'Server-rendered mutation refresh' {
+	It 'targets the server-rendered CRUD fragment directly' {
+		$crudList = Get-Content -LiteralPath (
+			Join-Path $script:RepoRoot 'views/components/crud-list.pode'
+		) -Raw
+		$crudList | Should -Match 'hx-target="#crud"'
+		$crudList | Should -Match 'hx-swap="outerMorph"'
+		$crudList | Should -Not -Match 'itemChanged'
+		$crudList | Should -Not -Match 'hx-on::after:request'
 	}
 
 	It 'declares only one modal wrapper in crudmgr.pode' {
@@ -104,13 +113,13 @@ Describe 'Controller-scoped mutation refresh' {
 	}
 
 	It 'ships the external controller through the build pipeline and layout' {
-		Test-Path -LiteralPath (Join-Path $script:RepoRoot 'src/crudmgr.js') | Should -Be $true
+		Test-Path -LiteralPath (Join-Path $script:RepoRoot 'src/crudmgr.ts') | Should -Be $true
 
 		$main = Get-Content -LiteralPath (Join-Path $script:RepoRoot 'views/layouts/main.pode') -Raw
 		$main | Should -Match 'src="/public/js/crudmgr.js"'
 
-		$buildAssets = Get-Content -LiteralPath (Join-Path $script:RepoRoot 'scripts/build-assets.mjs') -Raw
-		$buildAssets | Should -Match "src/crudmgr\.js.*public/js/crudmgr\.js"
+		$buildAssets = Get-Content -LiteralPath (Join-Path $script:RepoRoot 'scripts/build-assets.ts') -Raw
+		$buildAssets | Should -Match "src/crudmgr\.ts.*public/js/crudmgr\.js"
 
 		$manifest = Get-Content -LiteralPath (Join-Path $script:RepoRoot 'release-manifest.json') -Raw
 		$manifest | Should -Match '"public/js/crudmgr.js"'

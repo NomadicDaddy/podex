@@ -1,6 +1,9 @@
 ﻿BeforeAll {
 	Import-Module -Name PSSQLite -MaximumVersion 1.99.99 -Force
 
+	. (Join-Path $PSScriptRoot '../src/ItemStore.ps1')
+	. (Join-Path $PSScriptRoot '../src/ItemApp.ps1')
+
 	$script:DatabasePath = Join-Path $TestDrive 'podex-test.db'
 	$script:Response = $null
 	$script:DebugEnabled = $false
@@ -35,12 +38,27 @@
 		}
 	}
 
+	function Write-PodeViewResponse {
+		param(
+			[string]$Path,
+			[hashtable]$Data,
+			[int]$StatusCode
+		)
+
+		$script:Response = @{
+			Path = $Path
+			StatusCode = $StatusCode
+			Value = $Data
+		}
+	}
+
 	function Invoke-CrudHandler {
 		param(
 			[ValidateSet('GET', 'POST', 'PUT', 'DELETE')]
 			[string]$Method,
 			[hashtable]$Data = @{},
-			[hashtable]$Query = @{}
+			[hashtable]$Query = @{},
+			[switch]$Htmx
 		)
 
 		$script:Response = $null
@@ -50,7 +68,7 @@
 			Path = '/api/crud'
 			Query = $Query
 			Request = @{
-				Headers = @{}
+				Headers = if ($Htmx) { @{ 'HX-Request' = 'true' } } else { @{} }
 			}
 		}
 
@@ -116,6 +134,39 @@ Describe 'Canonical CRUD item model' {
 		$deleteResponse.Value.id | Should -Be $created.id
 		$remaining = Invoke-SqliteQuery -DataSource $script:DatabasePath -Query 'SELECT COUNT(*) AS [count] FROM [items] WHERE [id] = @id;' -SqlParameters @{ id = $created.id } -As PSObject
 		$remaining.count | Should -Be 0
+	}
+
+	It 'returns server-rendered view data for an htmx GET request' {
+		$response = Invoke-CrudHandler -Method GET -Htmx
+
+		$response.StatusCode | Should -Be 200
+		$response.Path | Should -Be 'components/crud-list'
+		$response.Value.Items.Count | Should -Be 10
+		$response.Value.TotalItems | Should -BeGreaterThan 10
+		$response.Value.CurrentPage | Should -Be 1
+	}
+
+	It 'returns a refreshed server-rendered list after an htmx POST request' {
+		$response = Invoke-CrudHandler -Method POST -Htmx -Data @{
+			item = 'Fragment item'
+			description = 'Rendered by Pode'
+		}
+
+		$response.StatusCode | Should -Be 200
+		$response.Path | Should -Be 'components/crud-list'
+		$response.Value.Items[0].Item | Should -Be 'Fragment item'
+		$response.Value.Items[0].Description | Should -Be 'Rendered by Pode'
+	}
+
+	It 'returns a renderable validation message for an invalid htmx POST request' {
+		$response = Invoke-CrudHandler -Method POST -Htmx -Data @{
+			item = ' '
+			description = 'Valid description'
+		}
+
+		$response.StatusCode | Should -Be 422
+		$response.Path | Should -Be 'components/crud-message'
+		$response.Value.Message | Should -Be 'Missing required field: item'
 	}
 
 	It 'reports the full matching total and navigation metadata on page 1' {
@@ -402,7 +453,7 @@ Describe 'Canonical CRUD item model' {
 			description = 'Valid description'
 		}
 
-		$postResponse.StatusCode | Should -Be 400
+		$postResponse.StatusCode | Should -Be 422
 		$postResponse.Value.message | Should -Be 'Item must be between 1 and 200 characters'
 	}
 
@@ -412,7 +463,7 @@ Describe 'Canonical CRUD item model' {
 			description = ('y' * 2001)
 		}
 
-		$postResponse.StatusCode | Should -Be 400
+		$postResponse.StatusCode | Should -Be 422
 		$postResponse.Value.message | Should -Be 'Description must be between 1 and 2000 characters'
 	}
 
@@ -429,7 +480,7 @@ Describe 'Canonical CRUD item model' {
 			description = 'Valid description'
 		}
 
-		$putResponse.StatusCode | Should -Be 400
+		$putResponse.StatusCode | Should -Be 422
 		$putResponse.Value.message | Should -Be 'Item must be between 1 and 200 characters'
 	}
 
@@ -446,7 +497,7 @@ Describe 'Canonical CRUD item model' {
 			description = ('y' * 2001)
 		}
 
-		$putResponse.StatusCode | Should -Be 400
+		$putResponse.StatusCode | Should -Be 422
 		$putResponse.Value.message | Should -Be 'Description must be between 1 and 2000 characters'
 	}
 
@@ -456,7 +507,7 @@ Describe 'Canonical CRUD item model' {
 			description = 'Valid description'
 		}
 
-		$postResponse.StatusCode | Should -Be 400
+		$postResponse.StatusCode | Should -Be 422
 		$postResponse.Value.message | Should -Be 'Missing required field: item'
 	}
 
@@ -466,7 +517,7 @@ Describe 'Canonical CRUD item model' {
 			description = '   '
 		}
 
-		$postResponse.StatusCode | Should -Be 400
+		$postResponse.StatusCode | Should -Be 422
 		$postResponse.Value.message | Should -Be 'Missing required field: description'
 	}
 
@@ -646,64 +697,68 @@ Describe 'Canonical CRUD item model' {
 Describe 'Search and pagination template contract' {
 	BeforeAll {
 		$script:RepoRoot = (Resolve-Path "$PSScriptRoot/..").Path
-		$script:Crudmgr = Get-Content -LiteralPath (Join-Path $script:RepoRoot 'views/components/crudmgr.pode') -Raw
+		$script:CrudList = Get-Content -LiteralPath (
+			Join-Path $script:RepoRoot 'views/components/crud-list.pode'
+		) -Raw
 	}
 
 	It 'uses type=search on the search input (not type=text)' {
-		$script:Crudmgr | Should -Match 'type="search"'
+		$script:CrudList | Should -Match 'type="search"'
 	}
 
-	It 'binds the search value from the response envelope' {
-		$script:Crudmgr | Should -Match 'value="\{\{search\}\}"'
+	It 'binds the search value from server-rendered view data' {
+		$script:CrudList | Should -Match 'value="\$\(\$data\.Search ;\)"'
 	}
 
 	It 'does not mark the search input as required' {
-		# Extract just the search input block and assert it has no required attr
 		$searchInputPattern = '(?s)<input[^>]*id="simple-search"[^>]*>'
-		$searchInput = ([regex]::Match($script:Crudmgr, $searchInputPattern)).Value
+		$searchInput = ([regex]::Match($script:CrudList, $searchInputPattern)).Value
 		$searchInput | Should -Not -Match '\brequired\b'
 	}
 
 	It 'removes every hx-params attribute from the template' {
-		$script:Crudmgr | Should -Not -Match 'hx-params'
+		$script:CrudList | Should -Not -Match 'hx-params'
 	}
 
-	It 'renders a hidden current-page input bound to currentPage' {
-		$script:Crudmgr | Should -Match 'id="current-page"'
-		$script:Crudmgr | Should -Match 'name="page"'
-		$script:Crudmgr | Should -Match 'value="\{\{currentPage\}\}"'
+	It 'renders a hidden current-page input from view data' {
+		$script:CrudList | Should -Match 'id="current-page"'
+		$script:CrudList | Should -Match 'name="page"'
+		$script:CrudList | Should -Match 'value="\$\(\$data\.CurrentPage ;\)"'
 	}
 
-	It 'declares hx-include on the #crud container for search and page' {
-		$script:Crudmgr | Should -Match 'hx-include="#simple-search, #current-page"'
+	It 'uses outerMorph for server-rendered list replacements' {
+		$script:CrudList | Should -Match 'hx-swap="outerMorph"'
 	}
 
 	It 'renders pagination controls as buttons, not anchor links' {
-		# Page links must be <button> elements with type=button, not <a href="#">
 		$pageLinkPattern = 'class="page-link'
-		$pageLinkMatches = ([regex]::Matches($script:Crudmgr, $pageLinkPattern)).Count
+		$pageLinkMatches = ([regex]::Matches($script:CrudList, $pageLinkPattern)).Count
 		$pageLinkMatches | Should -BeGreaterOrEqual 3
-		# No page-link should be on an <a> tag
-		$anchorPageLinks = ([regex]::Matches($script:Crudmgr, '<a[^>]*class="page-link')).Count
+		$anchorPageLinks = ([regex]::Matches($script:CrudList, '<a[^>]*class="page-link')).Count
 		$anchorPageLinks | Should -Be 0
 	}
 
 	It 'omits htmx actions from disabled controls' {
-		# The disabled guard wraps the entire button including hx-get, so a disabled
-		# control cannot issue a request. Assert the Mustache disabled guard exists.
-		$script:Crudmgr | Should -Match '\{\{\^hasPreviousPage\}\}disabled'
-		$script:Crudmgr | Should -Match '\{\{\^hasNextPage\}\}disabled'
-		$script:Crudmgr | Should -Match 'aria-disabled="true"'
+		$script:CrudList | Should -Match "'disabled aria-disabled=`"true`"'"
+		$script:CrudList | Should -Match '\$previousAttributes'
+		$script:CrudList | Should -Match '\$nextAttributes'
 	}
 
 	It 'sets aria-current=page only on the active page button' {
-		$script:Crudmgr | Should -Match '\{\{#isActive\}\}aria-current="page"\{\{/isActive\}\}'
+		$script:CrudList | Should -Match '\$page\.IsActive'
+		$script:CrudList | Should -Match "'aria-current=`"page`"'"
 	}
 
 	It 'includes the search input in pagination button requests' {
-		# The page already comes from each button's hx-get URL. Including the hidden
-		# current-page input would overwrite that destination with the active page.
-		$paginationIncludes = ([regex]::Matches($script:Crudmgr, 'hx-include="#simple-search"')).Count
+		$paginationIncludes = (
+			[regex]::Matches($script:CrudList, 'hx-include="#simple-search"')
+		).Count
 		$paginationIncludes | Should -Be 3
+	}
+
+	It 'contains no browser template or extension activation attributes' {
+		$script:CrudList | Should -Not -Match '\{\{'
+		$script:CrudList | Should -Not -Match '\bhx-ext='
+		$script:CrudList | Should -Not -Match 'mustache-template'
 	}
 }

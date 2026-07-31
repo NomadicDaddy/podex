@@ -66,9 +66,11 @@ BeforeAll {
 		HttpsEnabled = `$false
 	}
 	Podex = @{
+		AppName = 'Podex'
 		Debug = `$false
 		DatabaseType = 'SQLite'
 		DBFile = '$escapedDb'
+		PidFile = 'podex.pid'
 	}
 }
 "@
@@ -168,84 +170,82 @@ Describe 'HTTP security response headers' -Tag 'Security' {
 		@{ Name = 'static asset'; Path = '/public/images/podex.png' }
 	)
 
-	foreach ($route in $routes) {
-		It "sets X-Content-Type-Options nosniff on the $($route.Name)" {
-			Skip-IfServerUnavailable
-			$headers = Get-HeaderResponse -Path $route.Path
-			$headers | Should -Not -BeNullOrEmpty
-			$headers['X-Content-Type-Options'] | Should -Be 'nosniff'
-		}
+	It 'sets X-Content-Type-Options nosniff on the <Name>' -ForEach $routes {
+		Skip-IfServerUnavailable
+		$headers = Get-HeaderResponse -Path $Path
+		$headers | Should -Not -BeNullOrEmpty
+		$headers['X-Content-Type-Options'] | Should -Be 'nosniff'
+	}
 
-		It "sets Referrer-Policy no-referrer on the $($route.Name)" {
-			Skip-IfServerUnavailable
-			$headers = Get-HeaderResponse -Path $route.Path
-			$headers | Should -Not -BeNullOrEmpty
-			$headers['Referrer-Policy'] | Should -Be 'no-referrer'
-		}
+	It 'sets Referrer-Policy no-referrer on the <Name>' -ForEach $routes {
+		Skip-IfServerUnavailable
+		$headers = Get-HeaderResponse -Path $Path
+		$headers | Should -Not -BeNullOrEmpty
+		$headers['Referrer-Policy'] | Should -Be 'no-referrer'
+	}
 
-		It "sets X-Frame-Options DENY on the $($route.Name)" {
-			Skip-IfServerUnavailable
-			$headers = Get-HeaderResponse -Path $route.Path
-			$headers | Should -Not -BeNullOrEmpty
-			$headers['X-Frame-Options'] | Should -Be 'DENY'
-		}
+	It 'sets X-Frame-Options DENY on the <Name>' -ForEach $routes {
+		Skip-IfServerUnavailable
+		$headers = Get-HeaderResponse -Path $Path
+		$headers | Should -Not -BeNullOrEmpty
+		$headers['X-Frame-Options'] | Should -Be 'DENY'
+	}
 
-		It "sets Content-Security-Policy default-src 'self' on the $($route.Name)" {
-			Skip-IfServerUnavailable
-			$headers = Get-HeaderResponse -Path $route.Path
-			$headers | Should -Not -BeNullOrEmpty
-			$csp = $headers['Content-Security-Policy']
-			$csp | Should -Not -BeNullOrEmpty
-			$csp | Should -Match "default-src 'self'"
-		}
+	It "sets Content-Security-Policy default-src 'self' on the <Name>" -ForEach $routes {
+		Skip-IfServerUnavailable
+		$headers = Get-HeaderResponse -Path $Path
+		$headers | Should -Not -BeNullOrEmpty
+		$csp = $headers['Content-Security-Policy']
+		$csp | Should -Not -BeNullOrEmpty
+		$csp | Should -Match "default-src 'self'"
+	}
 
-		It "sets CSP script-src 'self' on the $($route.Name)" {
-			Skip-IfServerUnavailable
-			$headers = Get-HeaderResponse -Path $route.Path
-			$csp = $headers['Content-Security-Policy']
-			$csp | Should -Match "script-src 'self'"
-		}
+	It "sets CSP script-src 'self' on the <Name>" -ForEach $routes {
+		Skip-IfServerUnavailable
+		$headers = Get-HeaderResponse -Path $Path
+		$csp = $headers['Content-Security-Policy']
+		$csp | Should -Match "script-src 'self'"
+	}
 
-		It "sets CSP style-src 'self' on the $($route.Name)" {
-			Skip-IfServerUnavailable
-			$headers = Get-HeaderResponse -Path $route.Path
-			$csp = $headers['Content-Security-Policy']
-			$csp | Should -Match "style-src 'self'"
-		}
+	It "sets CSP style-src 'self' on the <Name>" -ForEach $routes {
+		Skip-IfServerUnavailable
+		$headers = Get-HeaderResponse -Path $Path
+		$csp = $headers['Content-Security-Policy']
+		$csp | Should -Match "style-src 'self'"
+	}
 
-		It "sets CSP img-src 'self' on the $($route.Name)" {
-			Skip-IfServerUnavailable
-			$headers = Get-HeaderResponse -Path $route.Path
-			$csp = $headers['Content-Security-Policy']
-			$csp | Should -Match "img-src 'self'"
-		}
+	It "sets CSP img-src 'self' on the <Name>" -ForEach $routes {
+		Skip-IfServerUnavailable
+		$headers = Get-HeaderResponse -Path $Path
+		$csp = $headers['Content-Security-Policy']
+		$csp | Should -Match "img-src 'self'"
+	}
 
-		It "sets CSP connect-src 'self' on the $($route.Name)" {
-			Skip-IfServerUnavailable
-			$headers = Get-HeaderResponse -Path $route.Path
-			$csp = $headers['Content-Security-Policy']
-			$csp | Should -Match "connect-src 'self'"
-		}
+	It "sets CSP connect-src 'self' on the <Name>" -ForEach $routes {
+		Skip-IfServerUnavailable
+		$headers = Get-HeaderResponse -Path $Path
+		$csp = $headers['Content-Security-Policy']
+		$csp | Should -Match "connect-src 'self'"
+	}
 
-		It "sets CSP object-src 'none' on the $($route.Name)" {
-			Skip-IfServerUnavailable
-			$headers = Get-HeaderResponse -Path $route.Path
-			$csp = $headers['Content-Security-Policy']
-			$csp | Should -Match "object-src 'none'"
-		}
+	It "sets CSP object-src 'none' on the <Name>" -ForEach $routes {
+		Skip-IfServerUnavailable
+		$headers = Get-HeaderResponse -Path $Path
+		$csp = $headers['Content-Security-Policy']
+		$csp | Should -Match "object-src 'none'"
+	}
 
-		It "sets CSP frame-ancestors 'none' on the $($route.Name)" {
-			Skip-IfServerUnavailable
-			$headers = Get-HeaderResponse -Path $route.Path
-			$csp = $headers['Content-Security-Policy']
-			$csp | Should -Match "frame-ancestors 'none'"
-		}
+	It "sets CSP frame-ancestors 'none' on the <Name>" -ForEach $routes {
+		Skip-IfServerUnavailable
+		$headers = Get-HeaderResponse -Path $Path
+		$csp = $headers['Content-Security-Policy']
+		$csp | Should -Match "frame-ancestors 'none'"
+	}
 
-		It "does NOT set Strict-Transport-Security on the HTTP $($route.Name)" {
-			Skip-IfServerUnavailable
-			$headers = Get-HeaderResponse -Path $route.Path
-			$headers.ContainsKey('Strict-Transport-Security') | Should -Be $false
-		}
+	It 'does NOT set Strict-Transport-Security on the HTTP <Name>' -ForEach $routes {
+		Skip-IfServerUnavailable
+		$headers = Get-HeaderResponse -Path $Path
+		$headers.ContainsKey('Strict-Transport-Security') | Should -Be $false
 	}
 
 	It 'does not allow inline scripts in the layout (CSP compatibility)' {

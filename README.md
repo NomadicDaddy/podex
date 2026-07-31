@@ -2,24 +2,25 @@
 
 Podex is a small starter for server-rendered web applications built with PowerShell,
 [Pode](https://github.com/Badgerati/Pode), and [htmx](https://htmx.org/). The backend
-serves Pode views and JSON endpoints; the browser uses htmx and
-[Mustache](https://mustache.github.io/) for the CRUD example.
+serves complete Pode views, HTML fragments for htmx, and JSON responses for ordinary API
+clients.
 
 It includes:
 
 - a SQLite-backed CRUD page with search, paging, create, edit, and delete actions;
 - file-based API handlers under `api/`;
-- Tailwind CSS, light and dark themes, and reusable Pode layouts and partials;
+- dependency-free native CSS, light and dark themes, and reusable Pode layouts and partials;
 - OpenAPI output at `/docs/openapi` and Swagger UI at `/docs/swagger`;
 - local-only database and server controls when `Podex.Debug` is enabled;
 - Pester, PSScriptAnalyzer, ESLint, Prettier, and a single `smoke:qc` command.
 
 ## Requirements
 
-- PowerShell 7
-- Bun
+- PowerShell 7.6+
+- Bun 1.3.14+
+- TypeScript 6.0.3
 - PSSQLite 1.x (runtime)
-- Pode 2.x (runtime)
+- Pode 2.12.1–2.x (runtime)
 
 The build (`bun run build` / `.build.ps1`) installs PSSQLite, Pode, and the development
 PowerShell modules (Pester, PSScriptAnalyzer) with pinned version ranges, then runs the
@@ -33,7 +34,7 @@ Set-Location podex
 bun run build
 ```
 
-The build installs the required PowerShell modules (PSSQLite 1.x, Pode 2.x) for
+The build installs the required PowerShell modules (PSSQLite 1.x, Pode 2.12.1–2.x) for
 the current user, installs Bun dependencies, runs every quality gate, and then
 initializes the example database at `data/podex.db` from `api/debug/init.sql` if
 it does not already exist. A clean checkout needs nothing else before
@@ -56,8 +57,11 @@ bun run stop
 
 ## Checks and releases
 
-`bun run smoke:qc` runs the PowerShell analyzer, ESLint, Pester, license checks, release
-packaging, and formatting. It reports all failed gates before exiting.
+`bun run smoke:qc` enforces TypeScript-only source, exact dependency versions, the 300-line
+runtime/tooling limit, strict type checking, PowerShell analysis and formatting, zero-warning
+ESLint, Pester, license checks, and release packaging. Release verification also confirms that
+every runtime-referenced public asset is present in the archive. The gate reports all failures
+before exiting. `bun run smoke:qc:fast` skips only Pester.
 
 `bun run release` rebuilds the browser assets, stages the files listed in
 `release-manifest.json` under `dist/podex-<version>/`, and produces a final
@@ -78,12 +82,10 @@ v0.3.0 tags were withdrawn, and no archive is distributed for either. Archives f
 earlier also omitted the MIT copyright notice from `public/js/mustache.js` and contained no
 third-party license documents, so any copy still in circulation should not be redistributed.
 
-Before publishing a tag, verify its Mustache notice with `bun run release:check-tag <tag>`.
-
 ## Contributing
 
-Run `bun run smoke:qc` before opening a pull request. Keep dependency changes in
-`package.json` and `bun.lock`, and regenerate the license documents with
+Run `bun run smoke:qc` before opening a pull request. Keep dependency versions exact in
+`package.json`, update `bun.lock`, and regenerate the license documents with
 `bun run licenses:generate` when the dependency graph changes.
 
 ## License

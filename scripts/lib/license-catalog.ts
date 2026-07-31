@@ -1,7 +1,36 @@
-export const browserAssets = [
+export interface BrowserAsset {
+	name: string;
+	role: string;
+}
+
+export interface ExternalModule {
+	license: string;
+	name: string;
+	role: string;
+	source: string;
+	version: string;
+}
+
+export interface TextAssertion {
+	message: string;
+	path: string;
+	text: string;
+}
+
+export const applicationName = 'Podex';
+
+export const browserAssets: readonly BrowserAsset[] = [
 	{ name: 'htmx.org', role: 'Copied into `public/js/htmx.js`' },
-	{ name: 'mustache', role: 'Copied into `public/js/mustache.js`' },
-	{ name: 'tailwindcss', role: 'Compiled into `public/css/output.css`' },
+];
+
+export const distributionNotes: readonly string[] = [];
+
+export const releaseTextAssertions: readonly TextAssertion[] = [
+	{
+		message: 'Browser-delivered stylesheet omits the About page content styles.',
+		path: 'public/css/podex.css',
+		text: '.podex-content',
+	},
 ];
 
 /**
@@ -50,18 +79,18 @@ export const licenseAliases = { 'BSD-0-Clause': '0BSD' };
  * restrictiveLicensePatterns. This intentionally errs toward flagging compound
  * SPDX expressions containing a restrictive term (e.g. "MIT AND BSL-1.1").
  */
-export function isRestrictiveLicense(raw) {
+export function isRestrictiveLicense(raw: string): boolean {
 	const upper = raw.toUpperCase();
 	return restrictiveLicensePatterns.some((pattern) => upper.includes(pattern.toUpperCase()));
 }
 
-export const externalModules = [
+export const externalModules: readonly ExternalModule[] = [
 	{
 		license: 'MIT',
 		name: 'Pode',
 		role: 'Runtime PowerShell module',
 		source: 'https://github.com/Badgerati/Pode',
-		version: '>=2.11.1 <3.0.0',
+		version: '>=2.12.1 <3.0.0',
 	},
 	{
 		license: 'MIT',
@@ -75,7 +104,7 @@ export const externalModules = [
 		name: 'Pester',
 		role: 'Development and test PowerShell module',
 		source: 'https://github.com/pester/Pester',
-		version: '>=5.6.1 <6.0.0',
+		version: '>=6.0.0 <7.0.0',
 	},
 	{
 		license: 'MIT',
@@ -83,20 +112,5 @@ export const externalModules = [
 		role: 'Development and lint PowerShell module',
 		source: 'https://github.com/PowerShell/PSScriptAnalyzer',
 		version: '>=1.23.0 <2.0.0',
-	},
-];
-
-export const vendoredAssets = [
-	{
-		license: '0BSD',
-		name: 'htmx client-side-templates extension',
-		paths: '`src/vendor/client-side-templates.js`',
-		source: 'https://github.com/bigskysoftware/htmx/tree/v1.9.12/src/ext',
-	},
-	{
-		license: '0BSD',
-		name: 'htmx json-enc extension',
-		paths: '`src/vendor/json-enc.js`',
-		source: 'https://github.com/bigskysoftware/htmx/tree/v1.9.12/src/ext',
 	},
 ];

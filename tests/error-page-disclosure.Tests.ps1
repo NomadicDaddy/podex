@@ -9,6 +9,7 @@
 BeforeAll {
 	$script:RepoRoot = (Resolve-Path "$PSScriptRoot/..").Path
 	$script:ConfigPath = Join-Path $script:RepoRoot 'server.psd1'
+	$script:ErrorTemplates = @('errors/404.html.pode', 'errors/default.html.pode')
 
 	function Get-FileContent {
 		param([string]$RelativePath)
@@ -29,10 +30,8 @@ Describe 'Error page exception disclosure configuration' {
 }
 
 Describe 'Error templates do not leak runtime internals' {
-	$errorTemplates = @('errors/404.html.pode', 'errors/default.html.pode')
-
 	It 'does not reference a PowerShell edition/version generator meta tag in any error template' {
-		foreach ($tpl in $errorTemplates) {
+		foreach ($tpl in $script:ErrorTemplates) {
 			$content = Get-FileContent $tpl
 			$content | Should -Not -Match 'PSVersionTable'
 			$content | Should -Not -Match 'PSEdition'
@@ -71,5 +70,14 @@ Describe 'Error templates do not leak runtime internals' {
 		$content = Get-FileContent 'errors/default.html.pode'
 		$content | Should -Match 'podex\.ico'
 		$content | Should -Not -Match 'favicon\.svg'
+	}
+
+	It 'uses configured branding and only the shared Podex stylesheet' {
+		foreach ($tpl in $script:ErrorTemplates) {
+			$content = Get-FileContent $tpl
+			$content | Should -Match 'Get-PodeConfig'
+			$content | Should -Match '/public/css/podex\.css'
+			$content | Should -Not -Match '/public/css/(output|todomvc)'
+		}
 	}
 }
