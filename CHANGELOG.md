@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-07-30
+
+### Added
+
+- Added Bun identity, exact-dependency, runtime/tooling line-limit, and pre-commit fast-gate
+  enforcement.
+- Release verification now fails when runtime source references a public asset omitted from the
+  release manifest.
+- Added an isolated HTTP journey for server rendering, JSON clients, form-encoded CRUD mutations,
+  search, validation, deletion, and HTML encoding.
+- Added a lightweight `/health` endpoint for readiness checks.
+
+### Changed
+
+- Aligned editor, TypeScript, ESLint, and package-script conventions with the workspace toolchain.
+- The CRUD page now renders its initial collection and every htmx response on the server. The
+  `/api/crud` handlers accept normal form submissions from htmx while preserving their JSON
+  response contract for ordinary API clients.
+- Shared item validation, persistence, pagination, request mapping, and view-data preparation now
+  live in focused PowerShell source modules consumed by both page and API routes.
+- Replaced the utility-class UI with a semantic native CSS system, refreshed the Podex visual
+  design, and retained automatic light and dark themes.
+- Server startup now archives the preceding session's log files before Pode opens fresh request
+  and error logs.
+
+### Removed
+
+- Removed Mustache, the `client-side-templates` and `json-enc` htmx extensions, their generated
+  assets, and the browser event choreography they required.
+- Removed the obsolete historical Mustache tag checker; current release checks verify the assets
+  that Podex actually distributes.
+- Removed Tailwind CSS, its CLI, and its Prettier plugin from the build and dependency graph.
+
 ## [0.6.0] - 2026-07-30
 
 ### Added
@@ -77,7 +110,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   it, so the guard queries the history in the push range rather than the tip. Contributors who clone
   the repository must set `core.hooksPath` themselves; Git does not install hooks on clone.
 - `bun run check:license-core`, a fail-closed self-test of the license-classification core that runs
-  ahead of `check:licenses`, plus a positive reviewed-license allowlist in `license-catalog.mjs`
+  ahead of `check:licenses`, plus a positive reviewed-license allowlist in `license-catalog.ts`
   layered on top of the existing restrictive-license denylist.
 
 ### Changed
