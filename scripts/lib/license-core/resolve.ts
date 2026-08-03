@@ -6,6 +6,8 @@
  * and must not be removed: the licence core is shared, and other adopters consume them. A dead-code
  * report naming an export in this file is not evidence that the export is unused.
  */
+import type { Dirent } from 'node:fs';
+
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -71,6 +73,38 @@ async function storeCopies(root: string, name: string): Promise<string[]> {
 		.map((entry) => join(store, entry, 'node_modules', name));
 }
 
+const SKIPPED_ENTRIES = new Set(['.bin', '.bun', '.cache']);
+
+const isTraversable = (entry: Dirent): boolean =>
+	(entry.isDirectory() || entry.isSymbolicLink()) && !SKIPPED_ENTRIES.has(entry.name);
+
+/**
+ * The package directories directly under a `node_modules`.
+ *
+ * A scope directory (`@octokit/`) contains packages rather than being one, so it is expanded
+ * instead of probed. Without that, a nested copy under a scoped package —
+ * `node_modules/@octokit/endpoint/node_modules/@octokit/types` — is unreachable, and a hoisted
+ * install that keeps a second version there reports the package as not installed at all.
+ */
+async function packageDirs(nodeModules: string): Promise<string[]> {
+	const entries = await readdir(nodeModules, { withFileTypes: true }).catch(() => []);
+	const dirs: string[] = [];
+
+	for (const entry of entries) {
+		if (!isTraversable(entry)) continue;
+		if (!entry.name.startsWith('@')) {
+			dirs.push(join(nodeModules, entry.name));
+			continue;
+		}
+		const scope = join(nodeModules, entry.name);
+		const scoped = await readdir(scope, { withFileTypes: true }).catch(() => []);
+		for (const child of scoped) {
+			if (isTraversable(child)) dirs.push(join(scope, child.name));
+		}
+	}
+	return dirs;
+}
+
 async function findNestedVersion(
 	nodeModules: string,
 	name: string,
@@ -78,17 +112,8 @@ async function findNestedVersion(
 	depth: number,
 ): Promise<null | string> {
 	if (depth > 5) return null;
-	let entries;
-	try {
-		entries = await readdir(nodeModules, { withFileTypes: true });
-	} catch {
-		return null;
-	}
 
-	for (const entry of entries) {
-		if (!entry.isDirectory() && !entry.isSymbolicLink()) continue;
-		if (entry.name === '.bin' || entry.name === '.cache' || entry.name === '.bun') continue;
-		const packageDir = join(nodeModules, entry.name);
+	for (const packageDir of await packageDirs(nodeModules)) {
 		const nested = join(packageDir, 'node_modules', name);
 		if ((await readJson(join(nested, 'package.json')))?.version === version) return nested;
 		const found = await findNestedVersion(
