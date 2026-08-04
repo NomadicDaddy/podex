@@ -15,3 +15,7 @@ public/js/
 api/crud/*.json
 AGENTS.md
 screenshots/
+
+# secret — an .env holds live credentials; never commit one
+.env
+.env.*
