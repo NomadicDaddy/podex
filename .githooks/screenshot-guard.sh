@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Blocks pushing a version tag whose screenshot artifact is missing.
+# Blocks pushing a version tag whose screenshot artifact is missing, incomplete, or failed.
 #
 # Every release captures the shipped UI into screenshots/v<version>/ (`bun run smoke:screenshots`,
 # run AFTER the version bump so the directory name matches the tag). The directory is gitignored,
@@ -11,16 +11,23 @@
 # Only refs/tags/v* pushes are checked. The template names the directory v<version>; derived apps
 # name it v<version>-sv<template-version>, so any directory starting with the tag version passes.
 #
-# A full-looking directory is not proof of a good crawl: a run that fails on the last page still
-# leaves 40 PNGs behind. The crawl stamps its own verdict into crawl-result.json (`started` before
-# the first page loads, `passed`/`failed` when the report lands), and this guard refuses anything
-# that does not say success. A capture with no such file predates the stamp — or comes from a repo
-# whose crawler does not write one — so it falls back to the PNG count alone.
+# The screenshots/ root is what says whether a repo captures at all. A headless repo — a CLI, a
+# library — never grows one, and this guard has nothing to enforce there, so a missing root passes.
+# Once the root exists the repo has opted in, and a tag with no directory under it is the exact
+# omission described above: that fails. Do not collapse these two cases into one "directory is
+# absent" check — that reads an opted-in repo's forgotten capture as an opted-out repo.
 #
-# Keep this file byte-identical between the aidd and spernakit repos.
+# A full-looking directory is not proof of a good crawl either: a run that fails on the last page
+# still leaves 40 PNGs behind. The crawl stamps its own verdict into crawl-result.json (`started`
+# before the first page loads, `passed`/`failed` when the report lands), and this guard refuses
+# anything that does not say success. A capture with no such file predates the stamp — or comes
+# from a repo whose crawler does not write one — so it falls back to the PNG count alone.
+#
+# Keep this file byte-identical between the aidd, spernakit, and starsync repos.
 set -euo pipefail
 
 ZERO=0000000000000000000000000000000000000000
+ROOT_DIR=screenshots
 MIN_PNGS=5
 RESULT_FILE=crawl-result.json
 problems=0
@@ -38,8 +45,14 @@ while read -r local_ref local_sha _remote_ref _remote_sha; do
 
 	version="${local_ref#refs/tags/}"
 
+	# No root: this repo does not capture screenshots. Nothing to enforce.
+	if [ ! -d "$ROOT_DIR" ]; then
+		note "tag $version: no $ROOT_DIR/ directory in this repository, nothing to check"
+		continue
+	fi
+
 	dir=""
-	for candidate in "screenshots/$version" "screenshots/$version"-sv*; do
+	for candidate in "$ROOT_DIR/$version" "$ROOT_DIR/$version"-sv*; do
 		if [ -d "$candidate" ]; then
 			dir="$candidate"
 			break
@@ -47,7 +60,7 @@ while read -r local_ref local_sha _remote_ref _remote_sha; do
 	done
 
 	if [ -z "$dir" ]; then
-		note "tag $version: no screenshots/$version/ directory exists"
+		note "tag $version: $ROOT_DIR/ exists but has no $version/ capture"
 		problems=1
 		continue
 	fi
