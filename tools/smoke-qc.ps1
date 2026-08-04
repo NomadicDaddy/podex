@@ -7,8 +7,9 @@
 # pass.
 #
 # Pass -SkipTests for the fast variant (smoke:qc:fast): runs every gate except
-# the Pester test suite, which is the only slow gate (~70s). Useful for rapid
-# iteration between full test runs.
+# the Pester test suite, which is the only slow gate (~70s), and check:leak-guard,
+# which the pre-commit hook has already covered by the time it calls this. Useful
+# for rapid iteration between full test runs.
 #
 # Gates use the repository's existing scripts and binaries. Caching is omitted because
 # the gates complete in seconds.
@@ -24,6 +25,7 @@ Set-Location -LiteralPath $root
 $config = Import-PowerShellDataFile -LiteralPath (Join-Path $root 'server.psd1')
 
 $gates = @(
+	@{ Name = 'check:leak-guard'; Cmd = { bun run check:leak-guard } },
 	@{ Name = 'analyze'; Cmd = { bun run analyze } },
 	@{ Name = 'format:pwsh:check'; Cmd = { bun run format:pwsh:check } },
 	@{ Name = 'check:typescript-only'; Cmd = { bun run check:typescript-only } },
@@ -38,7 +40,11 @@ $gates = @(
 )
 
 if ($SkipTests) {
-	$gates = @($gates | Where-Object { $_.Name -ne 'test' })
+	# check:leak-guard joins test here, not because it is slow but because the pre-commit hook
+	# already ran .githooks/leak-guard.sh directly, ahead of smoke:qc:fast. The self-test verifies
+	# that same script against synthetic fixtures; re-running it inside the fast subset would pay
+	# for the guard twice on every commit and report nothing the direct call did not.
+	$gates = @($gates | Where-Object { $_.Name -notin @('test', 'check:leak-guard') })
 }
 
 $failed = @()

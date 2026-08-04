@@ -1,9 +1,44 @@
 #!/usr/bin/env bash
-# Canonical local quality gate for normal commits. The full smoke:qc, including
-# Pester, remains the final and hosted quality gate.
+# Fast pre-commit gate: leak-guard + `bun run smoke:qc:fast`.
+#
+# leak-guard scans the staged index diff, so it is uncacheable-by-design and runs first as a
+# security gate. The static checks that follow are delegated to `smoke:qc:fast`, each repository's
+# own no-tests subset of smoke:qc — content-hash cached and ordered by ascending cost/failure rate
+# where the repository implements it that way, so a doomed commit fails on the cheapest failing
+# check first. The full smoke:qc (tests, builds, and the remaining static checks) still runs in CI.
+#
+# This hook depends on a script-name contract, not on any repository's internals: every repo that
+# installs it defines `smoke:qc:fast`, `check:licenses`, and `check:leak-guard` in package.json and
+# is free to implement them differently. That is what lets this file stay byte-identical while the
+# repositories diverge — a repo with no third-party inventory to verify may legitimately define
+# `check:licenses` as the license core alone.
+#
+# Bypass with `git commit --no-verify` only for WIP/experimental commits
+# or confirmed false positives.
+#
+# Keep this file byte-identical between the aidd, spernakit, and starsync repos.
+
 set -euo pipefail
 
-echo "pre-commit: smoke:qc:fast"
+echo "pre-commit: leak-guard"
+bash .githooks/leak-guard.sh
+
+echo "pre-commit: qc (cached subset of smoke:qc)"
 bun run smoke:qc:fast
+
+# The license checks read bun.lock and the installed tree — the third-party inventory is generated
+# FROM the lockfile — so a dependency change can break them without touching a single source file.
+# check:licenses is not in the fast subset, so nothing local catches that; it has reached main more
+# than once and surfaced only in a later full smoke:qc. Gate it here, but only when a dependency
+# manifest is actually staged, so ordinary commits pay nothing for it.
+#
+# Read into a variable rather than piping into grep: under `set -o pipefail` a matching `grep -q`
+# can still fail the pipeline when it closes the pipe early and git takes SIGPIPE, which would
+# silently skip the check on exactly the commits that need it.
+staged_files=$(git diff --cached --name-only --diff-filter=ACMR)
+if grep -qE '(^|/)(bun\.lock|package\.json)$' <<<"$staged_files"; then
+	echo "pre-commit: check:licenses (dependency manifest staged)"
+	bun run check:licenses
+fi
 
 echo "pre-commit: passed"
