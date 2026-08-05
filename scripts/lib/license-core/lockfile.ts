@@ -15,13 +15,26 @@ export type RootDependencyField = 'dependencies' | 'devDependencies' | 'optional
 
 export interface LockedPackage {
 	name: string;
+	/**
+	 * The lockfile entry restricts this package to particular platforms (`os`, `cpu`, or `libc`).
+	 *
+	 * The lockfile lists every platform's variant of a native package, but an install materializes
+	 * only the ones this machine matches. A consumer that reads each resolved package off disk
+	 * therefore has to distinguish "not installed because this platform does not use it" from
+	 * "not installed because the tree is stale", and only the lockfile knows which. Optional
+	 * rather than required so adopters on an older copy of this module keep compiling.
+	 */
+	platformGated?: boolean;
 	version: string;
 }
 
 interface LockEntry {
+	cpu?: string | string[];
 	dependencies?: Record<string, string>;
+	libc?: string | string[];
 	optionalDependencies?: Record<string, string>;
 	optionalPeers?: string[];
+	os?: string | string[];
 	peerDependencies?: Record<string, string>;
 }
 
@@ -96,6 +109,16 @@ function installedDependencies(
 	return dependencies;
 }
 
+/**
+ * Whether the entry names any platform constraint at all, rather than whether it matches this
+ * host. Bun records `os` and `cpu` but not `libc`, so a musl build and a glibc build of the same
+ * package are indistinguishable here; evaluating the constraint would call one of them installable
+ * on a Linux host that will never install it. Presence is the question that can be answered.
+ */
+function isPlatformGated(meta: LockEntry): boolean {
+	return meta.os !== undefined || meta.cpu !== undefined || meta.libc !== undefined;
+}
+
 export interface LockfileClosureOptions {
 	includePeerDependencies?: boolean;
 	internal: ReadonlySet<string>;
@@ -157,7 +180,10 @@ export async function collectLockfileClosure(
 			continue;
 		}
 		if (options.internal.has(locked.name)) continue;
-		resolvedPackages.set(`${locked.name}@${locked.version}`, locked);
+		resolvedPackages.set(`${locked.name}@${locked.version}`, {
+			...locked,
+			platformGated: isPlatformGated(entry.meta),
+		});
 
 		for (const dependency of installedDependencies(
 			entry.meta,
