@@ -41,6 +41,8 @@ interface LockEntry {
 interface QueueEntry {
 	fromChain: string[];
 	fromName: null | string;
+	/** Whether every edge walked to reach this package came from a platform-gated parent. */
+	gated: boolean;
 	name: string;
 	optional: boolean;
 }
@@ -114,6 +116,14 @@ function installedDependencies(
  * host. Bun records `os` and `cpu` but not `libc`, so a musl build and a glibc build of the same
  * package are indistinguishable here; evaluating the constraint would call one of them installable
  * on a Linux host that will never install it. Presence is the question that can be answered.
+ *
+ * Gating is inherited across edges, because reachability is what decides whether an install
+ * materializes a package. `@img/sharp-wasm32` declares no constraint of its own and is reached
+ * only through `@img/sharp-freebsd-wasm32` (`os: freebsd`) and `@img/sharp-webcontainers-wasm32`
+ * (`cpu: none`), so no ordinary install ever writes it to disk, and neither does its own
+ * dependency `@emnapi/runtime`. Reading this entry alone called both of them missing installs.
+ * A package reachable by any unrestricted path is not gated, which is why the traversal lets an
+ * unrestricted arrival overwrite a gated one rather than stopping at the first visit.
  */
 function isPlatformGated(meta: LockEntry): boolean {
 	return meta.os !== undefined || meta.cpu !== undefined || meta.libc !== undefined;
@@ -142,7 +152,13 @@ export async function collectLockfileClosure(
 			if (typeof declared !== 'object' || declared === null) continue;
 			for (const name of Object.keys(declared as Record<string, unknown>)) {
 				if (!options.internal.has(name)) {
-					queue.push({ fromChain: [], fromName: null, name, optional: false });
+					queue.push({
+						fromChain: [],
+						fromName: null,
+						gated: false,
+						name,
+						optional: false,
+					});
 				}
 			}
 		}
@@ -150,7 +166,11 @@ export async function collectLockfileClosure(
 
 	const resolvedPackages = new Map<string, LockedPackage>();
 	const unresolved = new Set<string>();
-	const visited = new Set<string>();
+	// Records the gating each key was last recorded under, not merely that it was seen. A key first
+	// reached through a platform-gated parent is revisited if an unrestricted path to it turns up
+	// later, so the answer does not depend on which edge the queue happened to walk first. Only
+	// that downgrade re-enqueues, so every key is processed at most twice and the walk terminates.
+	const visited = new Map<string, boolean>();
 
 	while (queue.length > 0) {
 		const item = queue.shift();
@@ -164,10 +184,12 @@ export async function collectLockfileClosure(
 			}
 			continue;
 		}
-		if (visited.has(resolved.key)) continue;
-		visited.add(resolved.key);
-
 		const entry = packageEntry(lock.packages[resolved.key]);
+		const gated = item.gated || (entry !== null && isPlatformGated(entry.meta));
+		// Revisit only to relax a gating already recorded; an equal or stricter arrival adds nothing.
+		if (visited.has(resolved.key) && !(visited.get(resolved.key) === true && !gated)) continue;
+		visited.set(resolved.key, gated);
+
 		const locked = entry === null ? null : splitSpec(entry.spec);
 		if (entry === null || locked === null) {
 			// The key exists in the lockfile but the entry does not parse: surface it as
@@ -182,7 +204,7 @@ export async function collectLockfileClosure(
 		if (options.internal.has(locked.name)) continue;
 		resolvedPackages.set(`${locked.name}@${locked.version}`, {
 			...locked,
-			platformGated: isPlatformGated(entry.meta),
+			platformGated: gated,
 		});
 
 		for (const dependency of installedDependencies(
@@ -192,6 +214,7 @@ export async function collectLockfileClosure(
 			queue.push({
 				fromChain: resolved.chain,
 				fromName: locked.name,
+				gated,
 				name: dependency.name,
 				optional: dependency.optional,
 			});
