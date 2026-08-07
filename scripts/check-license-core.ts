@@ -44,43 +44,51 @@ const cases = [
 	{ expected: false, license: 'UNKNOWN' },
 ];
 
-const failures = cases.filter((testCase) => {
-	return reviewLicenseExpression(testCase.license, policy).ok !== testCase.expected;
-});
+export async function runLicenseCore(root: string = cwd()): Promise<number> {
+	const failures = cases.filter((testCase) => {
+		return reviewLicenseExpression(testCase.license, policy).ok !== testCase.expected;
+	});
 
-const parsed: LicenseExpression = parseLicenseExpression('MIT AND Apache-2.0');
-if (parsed.kind !== 'and') failures.push({ expected: true, license: '<parser shape>' });
+	const parsed: LicenseExpression = parseLicenseExpression('MIT AND Apache-2.0');
+	if (parsed.kind !== 'and') failures.push({ expected: true, license: '<parser shape>' });
 
-const root = cwd();
-const installed = await collectInstalledPackages(root, []);
-if (installed.length === 0) failures.push({ expected: true, license: '<installed tree>' });
+	const installed = await collectInstalledPackages(root, []);
+	if (installed.length === 0) failures.push({ expected: true, license: '<installed tree>' });
 
-const internal = await workspaceNames(root, []);
-const rootFields: RootDependencyField[] = ['dependencies', 'devDependencies'];
-const locked = await collectLockfileClosure(root, {
-	internal,
-	rootFields,
-	workspaces: [''],
-});
-if (locked.packages.length === 0) failures.push({ expected: true, license: '<lockfile roots>' });
+	const internal = await workspaceNames(root, []);
+	const rootFields: RootDependencyField[] = ['dependencies', 'devDependencies'];
+	const locked = await collectLockfileClosure(root, {
+		internal,
+		rootFields,
+		workspaces: [''],
+	});
+	if (locked.packages.length === 0)
+		failures.push({ expected: true, license: '<lockfile roots>' });
 
-const sample = installed[0];
-if (sample !== undefined) {
-	const resolved = await resolveInstalledPackage(root, [], sample.name, sample.version);
-	if (resolved === null) failures.push({ expected: true, license: '<installed resolution>' });
-	else {
-		await readLicenseText(resolved);
-		await readNoticeText(resolved);
+	const sample = installed[0];
+	if (sample !== undefined) {
+		const resolved = await resolveInstalledPackage(root, [], sample.name, sample.version);
+		if (resolved === null) failures.push({ expected: true, license: '<installed resolution>' });
+		else {
+			await readLicenseText(resolved);
+			await readNoticeText(resolved);
+		}
 	}
+
+	if (failures.length > 0) {
+		for (const failure of failures) {
+			console.error(
+				`License core fixture failed: ${failure.license} expected ${failure.expected}.`,
+			);
+		}
+		console.error(`[FAIL] check:license-core -- ${failures.length} fixture(s) failed.`);
+		return 1;
+	}
+
+	console.info(
+		`[OK] check:license-core -- ${cases.length} expression cases plus graph checks passed.`,
+	);
+	return 0;
 }
 
-if (failures.length > 0) {
-	for (const failure of failures) {
-		console.error(
-			`License core fixture failed: ${failure.license} expected ${failure.expected}.`,
-		);
-	}
-	exit(1);
-}
-
-console.info(`License core fixtures passed (${cases.length} expression cases plus graph checks).`);
+if (import.meta.main) exit(await runLicenseCore());
