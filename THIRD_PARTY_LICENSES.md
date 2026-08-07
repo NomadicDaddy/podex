@@ -48,16 +48,16 @@ The npm packages themselves are not included in the release.
 | `@eslint/js` | 10.0.1 | MIT |
 | `@types/bun` | 1.3.14 | MIT |
 | `eslint` | 10.8.0 | MIT |
-| `eslint-plugin-perfectionist` | 5.10.0 | MIT |
+| `eslint-plugin-perfectionist` | 5.10.1 | MIT |
 | `eslint-plugin-unused-imports` | 4.4.1 | MIT |
-| `globals` | 17.8.0 | MIT |
+| `globals` | 17.9.0 | MIT |
 | `htmx.org` | 4.0.0-beta6 | BSD-0-Clause |
 | `jiti` | 2.7.0 | MIT |
 | `prettier` | 3.9.6 | MIT |
 | `prettier-plugin-organize-attributes` | 1.0.0 | MIT |
 | `prettier-plugin-sort-json` | 4.2.0 | MIT |
 | `typescript` | 6.0.3 | Apache-2.0 |
-| `typescript-eslint` | 8.65.0 | MIT |
+| `typescript-eslint` | 8.66.0 | MIT |
 
 ## Copyleft and weak-copyleft build components
 
