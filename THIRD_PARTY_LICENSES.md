@@ -47,7 +47,7 @@ The npm packages themselves are not included in the release.
 | --- | --- | --- |
 | `@eslint/js` | 10.0.1 | MIT |
 | `@types/bun` | 1.3.14 | MIT |
-| `eslint` | 10.8.0 | MIT |
+| `eslint` | 10.8.1 | MIT |
 | `eslint-plugin-perfectionist` | 5.10.1 | MIT |
 | `eslint-plugin-unused-imports` | 4.4.1 | MIT |
 | `globals` | 17.9.0 | MIT |
