@@ -1,0 +1,9 @@
+# This repository captures its shipped UI into screenshots/v<version>/ on every release.
+#
+# .githooks/screenshot-guard.sh reads this file, and only this file, to decide whether a v* tag
+# push has to carry a capture. The screenshots/ directory cannot answer that question itself: it is
+# gitignored, so it exists on the machine that captured and not in a fresh clone, and several
+# repositories keep one for something other than releases.
+#
+# Delete this file to stop the guard enforcing captures here. Do not delete it because a release is
+# inconvenient; that is the omission the guard exists to catch.

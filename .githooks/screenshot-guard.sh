@@ -11,11 +11,20 @@
 # Only refs/tags/v* pushes are checked. The template names the directory v<version>; derived apps
 # name it v<version>-sv<template-version>, so any directory starting with the tag version passes.
 #
-# The screenshots/ root is what says whether a repo captures at all. A headless repo — a CLI, a
-# library — never grows one, and this guard has nothing to enforce there, so a missing root passes.
-# Once the root exists the repo has opted in, and a tag with no directory under it is the exact
-# omission described above: that fails. Do not collapse these two cases into one "directory is
-# absent" check — that reads an opted-in repo's forgotten capture as an opted-out repo.
+# A TRACKED .screenshot-capture file is what says whether a repo captures at all. A headless repo —
+# a CLI, a library — never adds one, and this guard has nothing to enforce there, so its absence
+# passes. Once the file exists the repo has opted in, and a tag with no directory under
+# screenshots/ is the exact omission described above: that fails. Do not collapse these two cases
+# into one "capture is absent" check — that reads an opted-in repo's forgotten capture as an
+# opted-out repo.
+#
+# The declaration must be TRACKED, and screenshots/ itself cannot be it. That directory is
+# gitignored in every repository this guard protects, so a predicate reading it answers from
+# untracked local state: the same commit opted in on the machine that captured and opted out in a
+# fresh clone, which is where a release is most likely to be cut by someone who has not captured.
+# Four repositories also grew a screenshots/ root for something other than releases and were
+# silently one tag away from a block they had never agreed to. A repository states what it is; the
+# guard does not guess it from what happens to be on disk. Recorded as punchlist C7.
 #
 # A full-looking directory is not proof of a good crawl either: a run that fails on the last page
 # still leaves 40 PNGs behind. The crawl stamps its own verdict into crawl-result.json (`started`
@@ -27,6 +36,7 @@
 set -euo pipefail
 
 ZERO=0000000000000000000000000000000000000000
+CONTRACT_FILE=.screenshot-capture
 ROOT_DIR=screenshots
 MIN_PNGS=5
 RESULT_FILE=crawl-result.json
@@ -45,9 +55,17 @@ while read -r local_ref local_sha _remote_ref _remote_sha; do
 
 	version="${local_ref#refs/tags/}"
 
-	# No root: this repo does not capture screenshots. Nothing to enforce.
-	if [ ! -d "$ROOT_DIR" ]; then
-		note "tag $version: no $ROOT_DIR/ directory in this repository, nothing to check"
+	# Undeclared: this repo does not capture screenshots. Nothing to enforce. A root with no
+	# declaration is called out rather than passed silently, because it is the one shape that is
+	# either an unfinished opt-in or a directory that means something else here, and only someone
+	# in this repository can say which.
+	if [ ! -f "$CONTRACT_FILE" ]; then
+		if [ -d "$ROOT_DIR" ]; then
+			note "tag $version: $ROOT_DIR/ exists but $CONTRACT_FILE does not, so nothing is enforced"
+			note "  add $CONTRACT_FILE if this repository's releases must carry a capture"
+		else
+			note "tag $version: no $CONTRACT_FILE in this repository, nothing to check"
+		fi
 		continue
 	fi
 
@@ -60,7 +78,7 @@ while read -r local_ref local_sha _remote_ref _remote_sha; do
 	done
 
 	if [ -z "$dir" ]; then
-		note "tag $version: $ROOT_DIR/ exists but has no $version/ capture"
+		note "tag $version: $CONTRACT_FILE declares release capture, but $ROOT_DIR/ has no $version/"
 		problems=1
 		continue
 	fi
