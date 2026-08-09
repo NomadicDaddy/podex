@@ -31,7 +31,8 @@ secret_pattern='AKIA[0-9A-Z]{16}|xox[baprs]-[0-9A-Za-z-]{10,}|gh[pousr]_[A-Za-z0
 #
 # The leak is the key material, so that is what has to be present: base64 following the header
 # on the same line (a one-line JSON or .env value) or a whole added line of nothing but base64
-# (a pasted key body). A placeholder remainder like `\n...` or `',` matches neither.
+# (a pasted key body). A placeholder remainder like `\n...` or `',` matches neither. The header
+# does not have to belong to this commit; the body is what leaks.
 pem_header_pattern='-----BEGIN [A-Z ]*PRIVATE KEY-----'
 pem_inline_pattern="${pem_header_pattern}.*[A-Za-z0-9+/]{20,}"
 pem_body_pattern='^\+[A-Za-z0-9+/]{20,}={0,2}[[:space:]]*$'
@@ -44,17 +45,26 @@ path_pattern='[A-Za-z]:[\\/]+Users[\\/]+[A-Za-z0-9._-]+|/Users/[A-Za-z0-9._-]+/|
 secret_hits="$(printf '%s\n' "$added" | grep -nEi -e "$secret_pattern" || true)"
 path_hits="$(printf '%s\n' "$added" | grep -nE -e "$path_pattern" || true)"
 
-# Only the header lines and the line after each can decide the PEM rule, so the pair-by-pair walk
-# runs over those few rather than over every staged addition.
-pem_header_lines="$(printf '%s\n' "$added" | grep -nEi -e "$pem_header_pattern" | cut -d: -f1 || true)"
+# The PEM walk runs over a diff carrying one line of context rather than over $added, because a key
+# body can be added under a header that is already committed. The header is then not an addition at
+# all, so a scan of additions alone cannot see the pair, and pasting a body under a placeholder
+# header is the likeliest way this leak actually happens. Context lines make the adjacency visible
+# while '+' still marks what this commit is adding.
+pem_diff="$(git diff --cached --unified=1 --no-color -- . ':(exclude).githooks/leak-guard.sh' | grep -vE '^(\+\+\+|---)' || true)"
+# Only header lines and the line after each can decide the rule, so the pair-by-pair walk runs over
+# those few rather than over the whole diff.
+pem_header_lines="$(printf '%s\n' "$pem_diff" | grep -nEi -e "^[+ ].*${pem_header_pattern}" | cut -d: -f1 || true)"
 pem_hits=''
 for pem_line_no in $pem_header_lines; do
-	pem_pair="$(printf '%s\n' "$added" | sed -n "${pem_line_no},$((pem_line_no + 1))p")"
+	pem_pair="$(printf '%s\n' "$pem_diff" | sed -n "${pem_line_no},$((pem_line_no + 1))p")"
 	pem_header_line="$(printf '%s\n' "$pem_pair" | sed -n 1p)"
 	pem_next_line="$(printf '%s\n' "$pem_pair" | sed -n 2p)"
-	if printf '%s\n' "$pem_header_line" | grep -qEi -e "$pem_inline_pattern" ||
+	# Inline material counts only on an ADDED header. A committed header that already carries key
+	# material is not what this commit is leaking, and reporting it would block every later commit
+	# to that file with no way to clear it short of the bypass.
+	if printf '%s\n' "$pem_header_line" | grep -qEi -e "^\+.*${pem_inline_pattern}" ||
 		printf '%s\n' "$pem_next_line" | grep -qE -e "$pem_body_pattern"; then
-		pem_hits="$(printf '%s\n%s' "$pem_hits" "$pem_line_no:$pem_header_line")"
+		pem_hits="$(printf '%s\n%s' "$pem_hits" "$pem_line_no:${pem_header_line#?}")"
 	fi
 done
 

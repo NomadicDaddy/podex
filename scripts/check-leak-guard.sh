@@ -106,6 +106,14 @@ printf '%s\n' '\bzzz-synthetic-app\b' '\bzzz-sibling-app\b' >"$tmp/patterns-pair
 [ "$(run_guard "$tmp/patterns-pair" 'mentions zzz-synthetic-app somewhere')" = 0 ] || fail 'self pattern survived alongside a sibling pattern'
 guard_repo="$tmp/repo"
 
+# 11. A body pasted under a header that is ALREADY COMMITTED is blocked. The header is not an
+# addition in that commit, so a scan of additions alone cannot see the pair, and pasting a body
+# under a placeholder header left behind earlier is the likeliest way this leak actually happens.
+# Last because it is the only case that commits, and every case above stages against HEAD.
+[ "$(run_guard "$synthetic" "$pem_header")" = 0 ] || fail 'bare PEM header was blocked before the commit'
+git -C "$guard_repo" -c user.email=t@test -c user.name=t commit -q -m 'header only'
+[ "$(run_guard "$synthetic" "$(printf '%s\n%s' "$pem_header" "$b64_run")")" = 1 ] || fail 'body added under a committed PEM header was not blocked'
+
 if [ "$failures" -gt 0 ]; then
 	echo "check-leak-guard: $failures failure(s)" >&2
 	exit 1
