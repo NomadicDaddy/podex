@@ -55,9 +55,24 @@ run_guard() {
 aws_key="AKIA$(printf 'A%.0s' 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)"
 [ "$(run_guard "$synthetic" "key=$aws_key")" = 1 ] || fail 'synthetic AWS key was not blocked'
 
-# 3. Generic secret shape: runtime-built PEM header is blocked.
+# 3. A PEM header carrying no key material is NOT blocked. Config validators compare an incoming
+# key against this constant and documentation shows the shape a key takes, so the header alone
+# says "a key goes here". Blocking it blocks the template that ships those files: a scaffolded
+# project stages every one of them as an addition and could not make its first commit.
 pem_header="-----BEGIN RSA $(printf 'PRIVATE') KEY-----"
-[ "$(run_guard "$synthetic" "$pem_header")" = 1 ] || fail 'synthetic PEM header was not blocked'
+b64_run="$(printf 'A%.0s' 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24)"
+[ "$(run_guard "$synthetic" "expectedHeader: '$pem_header',")" = 0 ] || fail 'bare PEM header was blocked'
+
+# 3b. The same header with a pasted key body on the next line IS blocked. This is the shape the
+# rule exists for, and cases 3/3d are only safe because this one holds.
+[ "$(run_guard "$synthetic" "$(printf '%s\n%s' "$pem_header" "$b64_run")")" = 1 ] || fail 'pasted PEM key body was not blocked'
+
+# 3c. Key material after the header on the same line IS blocked: a one-line JSON or .env value
+# carries the whole key without ever starting a second line.
+[ "$(run_guard "$synthetic" "\"tlsKey\": \"${pem_header}\\n${b64_run}\"")" = 1 ] || fail 'one-line PEM key was not blocked'
+
+# 3d. A documentation placeholder standing in for the body is NOT blocked.
+[ "$(run_guard "$synthetic" "\"tlsKey\": \"${pem_header}\\n...\"")" = 0 ] || fail 'PEM placeholder in docs was blocked'
 
 # 4. Home-directory path (runtime-built backslashes) is blocked.
 bs="$(printf '\\')"
