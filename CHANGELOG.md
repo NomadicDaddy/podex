@@ -7,12 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-08-14
+
 ### Changed
 
-- Raised the supported Pode runtime floor to 2.14.0 and migrated request and error logging to
-  Pode's nondeprecated log-method/type API with UTC timestamps and explicit server/timeout errors.
-- Refreshed the pinned `globals` and `typescript-eslint` development dependencies and regenerated
-  their lockfile and license inventory entries.
+- Podex now requires Pode 2.14.0 and uses its current request and error logging API with UTC
+  timestamps and explicit server and timeout error categories.
+- Added a repository context guide and linked the TodoMVC-Podex example from the main project
+  documentation and About page.
+- Release and license checks now use an explicit screenshot-capability declaration, account for
+  platform-gated dependency chains, and resolve nested packages beneath scoped modules.
+
+### Security
+
+- Added staged-secret scanning to the pre-commit hook, ignored local `.env` files, and tightened
+  private-key detection so committed headers cannot hide key material on later lines.
 
 ## [0.7.1] - 2026-07-31
 
