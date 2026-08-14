@@ -169,9 +169,9 @@ Describe 'Module import version floors' {
 		$content | Should -Match 'Import-Module.*PSSQLite.*MaximumVersion\s+1\.99\.99'
 	}
 
-	It 'podex.ps1 imports Pode with MinimumVersion 2.12.1' {
+	It 'podex.ps1 imports Pode with MinimumVersion 2.14.0' {
 		$content = Get-Content -Raw -LiteralPath (Join-Path $script:RepoRoot 'podex.ps1')
-		$content | Should -Match 'Import-Module.*Pode.*MinimumVersion\s+2\.12\.1'
+		$content | Should -Match 'Import-Module.*Pode.*MinimumVersion\s+2\.14\.0'
 	}
 
 	It 'podex.ps1 imports Pode with MaximumVersion 2.99.99' {
@@ -186,7 +186,16 @@ Describe 'Module import version floors' {
 
 	It 'build script installs Pode with the same floor' {
 		$content = Get-Content -Raw -LiteralPath (Join-Path $script:RepoRoot '.build.ps1')
-		$content | Should -Match 'Install-Module.*Pode.*MinimumVersion\s+2\.12\.1'
+		$content | Should -Match 'Install-Module.*Pode.*MinimumVersion\s+2\.14\.0'
+	}
+
+	It 'uses the Pode 2.14 logging API without deprecated aliases' {
+		$content = Get-Content -Raw -LiteralPath (Join-Path $script:RepoRoot 'podex.ps1')
+		$content | Should -Match 'New-PodeLogFileMethod'
+		$content | Should -Match 'New-PodeLogTerminalMethod'
+		$content | Should -Match 'Enable-PodeLogRequestType -AsUtc'
+		$content | Should -Match 'Enable-PodeLogErrorType -Kind Server, Timeout -AsUtc'
+		$content | Should -Not -Match 'New-PodeLoggingMethod|Enable-PodeRequestLogging|Enable-PodeErrorLogging'
 	}
 }
 

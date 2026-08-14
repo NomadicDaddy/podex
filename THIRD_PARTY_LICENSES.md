@@ -27,7 +27,7 @@ No additional application-specific distribution notes.
 
 | Module | Expected range | License | Use | Upstream |
 | --- | --- | --- | --- | --- |
-| Pode | >=2.12.1 <3.0.0 | MIT | Runtime PowerShell module | [source](https://github.com/Badgerati/Pode) |
+| Pode | >=2.14.0 <3.0.0 | MIT | Runtime PowerShell module | [source](https://github.com/Badgerati/Pode) |
 | PSSQLite | >=1.1.0 <2.0.0 | MIT | Runtime PowerShell module | [source](https://github.com/RamblingCookieMonster/PSSQLite) |
 | Pester | >=6.0.0 <7.0.0 | Apache-2.0 | Development and test PowerShell module | [source](https://github.com/pester/Pester) |
 | PSScriptAnalyzer | >=1.23.0 <2.0.0 | MIT | Development and lint PowerShell module | [source](https://github.com/PowerShell/PSScriptAnalyzer) |
@@ -50,14 +50,14 @@ The npm packages themselves are not included in the release.
 | `eslint` | 10.8.1 | MIT |
 | `eslint-plugin-perfectionist` | 5.10.1 | MIT |
 | `eslint-plugin-unused-imports` | 4.4.1 | MIT |
-| `globals` | 17.9.0 | MIT |
+| `globals` | 17.11.0 | MIT |
 | `htmx.org` | 4.0.0-beta6 | BSD-0-Clause |
 | `jiti` | 2.7.0 | MIT |
 | `prettier` | 3.9.6 | MIT |
 | `prettier-plugin-organize-attributes` | 1.0.0 | MIT |
 | `prettier-plugin-sort-json` | 4.2.0 | MIT |
 | `typescript` | 6.0.3 | Apache-2.0 |
-| `typescript-eslint` | 8.66.0 | MIT |
+| `typescript-eslint` | 8.67.0 | MIT |
 
 ## Copyleft and weak-copyleft build components
 

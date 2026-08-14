@@ -8,7 +8,7 @@ Set-Location -LiteralPath $root
 
 '# required powershell modules (CurrentUser so no elevation is required)'
 Install-Module -Name PSSQLite -Scope CurrentUser -MinimumVersion 1.1.0 -MaximumVersion 1.99.99 -Verbose # MIT
-Install-Module -Name Pode -Scope CurrentUser -MinimumVersion 2.12.1 -MaximumVersion 2.99.99 -Verbose # MIT
+Install-Module -Name Pode -Scope CurrentUser -MinimumVersion 2.14.0 -MaximumVersion 2.99.99 -Verbose # MIT
 
 '# development powershell modules'
 Install-Module -Name Pester -Scope CurrentUser -MinimumVersion 6.0.0 -MaximumVersion 6.99.99 -Verbose # Apache 2.0

@@ -32,7 +32,7 @@ Debug handlers under `api/debug/` are registered only when `Podex.Debug` is enab
 use the short routes `/init`, `/clear`, and `/stop`, and the server restricts them to
 loopback clients.
 
-The runtime loads Pode 2.12.1–2.x and PSSQLite 1.x from the user's PowerShell module path. Do not
+The runtime loads Pode 2.14.0–2.x and PSSQLite 1.x from the user's PowerShell module path. Do not
 bundle those modules into the Podex release without carrying their license files as well.
 
 ## Browser code

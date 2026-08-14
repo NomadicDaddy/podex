@@ -228,7 +228,7 @@ Describe 'Fresh-checkout build database bootstrap' {
 	}
 
 	It 'installs Pode with the supported version floor' {
-		$script:BuildContent | Should -Match 'Install-Module.*Pode.*MinimumVersion\s+2\.12\.1.*MaximumVersion\s+2\.99\.99'
+		$script:BuildContent | Should -Match 'Install-Module.*Pode.*MinimumVersion\s+2\.14\.0.*MaximumVersion\s+2\.99\.99'
 	}
 
 	It 'installs modules before invoking either module' {

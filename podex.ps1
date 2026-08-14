@@ -4,7 +4,7 @@ Set-StrictMode -Version 3.0
 $ErrorActionPreference = 'Stop'
 
 Import-Module -Name 'PSSQLite' -MinimumVersion 1.1.0 -MaximumVersion 1.99.99 -Force
-Import-Module -Name 'Pode' -MinimumVersion 2.12.1 -MaximumVersion 2.99.99 -Force
+Import-Module -Name 'Pode' -MinimumVersion 2.14.0 -MaximumVersion 2.99.99 -Force
 Import-Module -Name "$PSScriptRoot/tools/PodexLog.psm1" -Force
 Import-Module -Name "$PSScriptRoot/tools/PodexRoute.psm1" -Force
 
@@ -72,13 +72,13 @@ Start-PodeServer -Name $bootstrapConfig.Podex.AppName -Threads 5 -ScriptBlock {
 	$dbFile = Join-Path (Resolve-Path -LiteralPath $dataDirectory).Path (Split-Path -Leaf $dbFile)
 	$cfg.Podex.DBFile = $dbFile
 
-	New-PodeLoggingMethod -File -Path $env:PODEX_LOG_PATH -Name 'requests' |
-		Enable-PodeRequestLogging
+	New-PodeLogFileMethod -Path $env:PODEX_LOG_PATH -Name 'requests' |
+		Enable-PodeLogRequestType -AsUtc
 	if ($cfg.Podex.Debug) {
-		New-PodeLoggingMethod -Terminal | Enable-PodeErrorLogging
+		New-PodeLogTerminalMethod | Enable-PodeLogErrorType -Kind Server, Timeout -AsUtc
 	} else {
-		New-PodeLoggingMethod -File -Path $env:PODEX_LOG_PATH -Name 'errors' |
-			Enable-PodeErrorLogging
+		New-PodeLogFileMethod -Path $env:PODEX_LOG_PATH -Name 'errors' |
+			Enable-PodeLogErrorType -Kind Server, Timeout -AsUtc
 	}
 
 	$httpPort = if ($env:PODEX_HTTP_PORT) { [int]$env:PODEX_HTTP_PORT } else {

@@ -24,7 +24,7 @@ It includes:
 - Bun 1.3.14+
 - TypeScript 6.0.3
 - PSSQLite 1.x (runtime)
-- Pode 2.12.1–2.x (runtime)
+- Pode 2.14.0–2.x (runtime)
 
 The build (`bun run build` / `.build.ps1`) installs PSSQLite, Pode, and the development
 PowerShell modules (Pester, PSScriptAnalyzer) with pinned version ranges, then runs the
@@ -38,7 +38,7 @@ Set-Location podex
 bun run build
 ```
 
-The build installs the required PowerShell modules (PSSQLite 1.x, Pode 2.12.1–2.x) for
+The build installs the required PowerShell modules (PSSQLite 1.x, Pode 2.14.0–2.x) for
 the current user, installs Bun dependencies, runs every quality gate, and then
 initializes the example database at `data/podex.db` from `api/debug/init.sql` if
 it does not already exist. A clean checkout needs nothing else before

@@ -90,7 +90,7 @@ export const externalModules: readonly ExternalModule[] = [
 		name: 'Pode',
 		role: 'Runtime PowerShell module',
 		source: 'https://github.com/Badgerati/Pode',
-		version: '>=2.12.1 <3.0.0',
+		version: '>=2.14.0 <3.0.0',
 	},
 	{
 		license: 'MIT',

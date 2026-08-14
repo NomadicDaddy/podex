@@ -11,7 +11,7 @@
 BeforeAll {
 	$script:RepoRoot = (Resolve-Path "$PSScriptRoot/..").Path
 
-	# Reproduce Pode 2.13's ConvertFrom-PodeFile escaping shape locally so the
+	# Reproduce Pode 2.14's ConvertFrom-PodeFile escaping shape locally so the
 	# test does not depend on a private function. The shape is:
 	#   param($data)`nreturn "<content with " replaced by `">"
 	# (the no-data branch omits the param clause).

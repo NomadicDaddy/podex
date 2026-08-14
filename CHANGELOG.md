@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Raised the supported Pode runtime floor to 2.14.0 and migrated request and error logging to
+  Pode's nondeprecated log-method/type API with UTC timestamps and explicit server/timeout errors.
+- Refreshed the pinned `globals` and `typescript-eslint` development dependencies and regenerated
+  their lockfile and license inventory entries.
+
 ## [0.7.1] - 2026-07-31
 
 ### Fixed
